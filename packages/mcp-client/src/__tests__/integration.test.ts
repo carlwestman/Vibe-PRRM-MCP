@@ -120,6 +120,26 @@ describe("Screening tools", () => {
     const data = await callTool("list_intersection_configs", {});
     expect(data).toBeDefined();
   });
+
+  it("get_current_universe returns data", async () => {
+    const data = await callTool("get_current_universe");
+    expect(data).toBeDefined();
+  });
+
+  it("get_universe_staleness returns data", async () => {
+    const data = await callTool("get_universe_staleness");
+    expect(data).toBeDefined();
+  });
+
+  it("list_universe_versions returns data", async () => {
+    const data = await callTool("list_universe_versions", {});
+    expect(data).toBeDefined();
+  });
+
+  it("get_universe_overrides returns data", async () => {
+    const data = await callTool("get_universe_overrides");
+    expect(data).toBeDefined();
+  });
 });
 
 // ─── Research ─────────────────────────────────────────────
@@ -286,7 +306,7 @@ describe("Platform tools", () => {
     const data = await callTool("get_tool_catalog");
     expect(Array.isArray(data)).toBe(true);
     const totalTools = data.reduce((sum: number, m: any) => sum + m.tools.length, 0);
-    expect(totalTools).toBe(96);
+    expect(totalTools).toBe(109);
   });
 
   it("health_check returns data", async () => {

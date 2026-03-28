@@ -296,4 +296,171 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
+
+  // ─── Universe management ────────────────────────────────
+
+  server.tool(
+    "get_current_universe",
+    "Get the current active investment universe",
+    {},
+    async () => {
+      const result = await api.get("/universe/current");
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "list_universe_versions",
+    "List historical universe versions",
+    {
+      limit: z.number().optional().describe("Max results"),
+      offset: z.number().optional().describe("Pagination offset"),
+    },
+    async (params) => {
+      const result = await api.get("/universe/versions", {
+        limit: params.limit?.toString(),
+        offset: params.offset?.toString(),
+      });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_universe_version",
+    "Get a specific universe version by ID",
+    {
+      id: z.string().describe("Universe version ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/universe/versions/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_universe_diff",
+    "Diff two universe versions to see what changed",
+    {
+      from: z.number().describe("Source universe version ID"),
+      to: z.number().describe("Target universe version ID"),
+    },
+    async ({ from, to }) => {
+      const result = await api.get("/universe/diff", {
+        from: from.toString(),
+        to: to.toString(),
+      });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_universe_staleness",
+    "Check how stale the current universe is relative to latest screening runs",
+    {},
+    async () => {
+      const result = await api.get("/universe/staleness");
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_position_alerts",
+    "Get position-level alerts for the universe (e.g. missing data, stale prices)",
+    {},
+    async () => {
+      const result = await api.get("/universe/alerts");
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_universe_overrides",
+    "Get active manual overrides on the universe",
+    {},
+    async () => {
+      const result = await api.get("/universe/overrides");
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "propose_universe",
+    "Create a universe proposal from an intersection run",
+    {
+      intersectionRunId: z.number().describe("Intersection run ID to base the proposal on"),
+      selectedResultIds: z.array(z.number()).optional().describe("Specific result IDs to include"),
+      overrides: z.array(z.any()).optional().describe("Manual override entries"),
+      proposedBy: z.string().optional().describe("Who is proposing the change"),
+    },
+    async (params) => {
+      const result = await api.post("/universe/propose", params);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_proposal",
+    "Get a universe proposal by ID",
+    {
+      id: z.string().describe("Proposal ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/universe/proposals/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "update_proposal_instrument",
+    "Toggle whether an instrument is included in a universe proposal",
+    {
+      id: z.string().describe("Proposal ID"),
+      instId: z.string().describe("Instrument ID"),
+      included: z.boolean().describe("Whether to include the instrument"),
+    },
+    async ({ id, instId, included }) => {
+      const result = await api.patch(`/universe/proposals/${id}/instruments/${instId}`, { included });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "add_override_to_proposal",
+    "Add a manual override instrument to a universe proposal",
+    {
+      id: z.string().describe("Proposal ID"),
+      borsdataInsId: z.number().describe("Borsdata instrument ID to add"),
+      displayName: z.string().describe("Display name for the instrument"),
+      rationale: z.string().describe("Reason for the manual override"),
+    },
+    async ({ id, ...rest }) => {
+      const result = await api.post(`/universe/proposals/${id}/overrides`, rest);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "remove_override_from_proposal",
+    "Remove a manual override instrument from a universe proposal",
+    {
+      id: z.string().describe("Proposal ID"),
+      instId: z.string().describe("Instrument ID to remove"),
+    },
+    async ({ id, instId }) => {
+      const result = await api.delete(`/universe/proposals/${id}/overrides/${instId}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "commit_universe",
+    "Commit a universe proposal, replacing the current active universe",
+    {
+      proposalId: z.number().describe("Proposal ID to commit"),
+    },
+    async ({ proposalId }) => {
+      const result = await api.put("/universe/replace", { proposalId });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
 }

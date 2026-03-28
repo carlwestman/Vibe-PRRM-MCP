@@ -1,6 +1,6 @@
 # PRRM MCP Tool Reference
 
-Complete reference for all 96 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
+Complete reference for all 109 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
 
 All parameters are validated with Zod schemas before the API call is made. Tool results are returned as JSON text content. Errors are never thrown -- they are returned as text so the agent can read and react to them.
 
@@ -11,7 +11,7 @@ All parameters are validated with Zod schemas before the API call is made. Tool 
 - [Strategy](#strategy) (4 tools)
 - [Instruments](#instruments) (8 tools)
 - [Comments](#comments) (2 tools)
-- [Screening](#screening) (21 tools)
+- [Screening](#screening) (34 tools)
 - [Research](#research) (5 tools)
 - [Valuation](#valuation) (7 tools)
 - [Investment Committee](#investment-committee) (10 tools)
@@ -510,6 +510,173 @@ Compare two intersection runs to see what changed.
 | `otherId` | string | required | Other intersection run ID to compare against |
 
 **Endpoint:** `GET /screening/intersection-runs/{id}/diff/{otherId}`
+
+---
+
+### `get_current_universe`
+
+Get the current active investment universe.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /universe/current`
+
+---
+
+### `list_universe_versions`
+
+List historical universe versions.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `limit` | number | optional | Max results |
+| `offset` | number | optional | Pagination offset |
+
+**Endpoint:** `GET /universe/versions`
+
+---
+
+### `get_universe_version`
+
+Get a specific universe version by ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Universe version ID |
+
+**Endpoint:** `GET /universe/versions/{id}`
+
+---
+
+### `get_universe_diff`
+
+Diff two universe versions to see what changed.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `from` | number | required | Source universe version ID |
+| `to` | number | required | Target universe version ID |
+
+**Endpoint:** `GET /universe/diff`
+
+---
+
+### `get_universe_staleness`
+
+Check how stale the current universe is relative to latest screening runs.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /universe/staleness`
+
+---
+
+### `get_position_alerts`
+
+Get position-level alerts for the universe (e.g. missing data, stale prices).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /universe/alerts`
+
+---
+
+### `get_universe_overrides`
+
+Get active manual overrides on the universe.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /universe/overrides`
+
+---
+
+### `propose_universe`
+
+Create a universe proposal from an intersection run.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `intersectionRunId` | number | required | Intersection run ID to base the proposal on |
+| `selectedResultIds` | number[] | optional | Specific result IDs to include |
+| `overrides` | array | optional | Manual override entries |
+| `proposedBy` | string | optional | Who is proposing the change |
+
+**Endpoint:** `POST /universe/propose`
+
+---
+
+### `get_proposal`
+
+Get a universe proposal by ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Proposal ID |
+
+**Endpoint:** `GET /universe/proposals/{id}`
+
+---
+
+### `update_proposal_instrument`
+
+Toggle whether an instrument is included in a universe proposal.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Proposal ID |
+| `instId` | string | required | Instrument ID |
+| `included` | boolean | required | Whether to include the instrument |
+
+**Endpoint:** `PATCH /universe/proposals/{id}/instruments/{instId}`
+
+---
+
+### `add_override_to_proposal`
+
+Add a manual override instrument to a universe proposal.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Proposal ID |
+| `borsdataInsId` | number | required | Borsdata instrument ID to add |
+| `displayName` | string | required | Display name for the instrument |
+| `rationale` | string | required | Reason for the manual override |
+
+**Endpoint:** `POST /universe/proposals/{id}/overrides`
+
+---
+
+### `remove_override_from_proposal`
+
+Remove a manual override instrument from a universe proposal.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Proposal ID |
+| `instId` | string | required | Instrument ID to remove |
+
+**Endpoint:** `DELETE /universe/proposals/{id}/overrides/{instId}`
+
+---
+
+### `commit_universe`
+
+Commit a universe proposal, replacing the current active universe.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `proposalId` | number | required | Proposal ID to commit |
+
+**Endpoint:** `PUT /universe/replace`
 
 ---
 

@@ -118,7 +118,7 @@ Add the following to your `openclaw.json`:
 
 ## Tool Catalog
 
-The server exposes 96 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
+The server exposes 109 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
 
 ### Strategy (4 tools)
 
@@ -149,7 +149,7 @@ The server exposes 96 tools across 12 modules. Every tool maps 1:1 to a PRRM RES
 | `get_comments` | Get comments for an instrument or research report |
 | `add_comment` | Add a comment to an instrument or research report |
 
-### Screening (21 tools)
+### Screening & Universe (34 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -174,6 +174,19 @@ The server exposes 96 tools across 12 modules. Every tool maps 1:1 to a PRRM RES
 | `list_intersection_runs` | List runs for an intersection configuration |
 | `get_intersection_run` | Get a specific intersection run with results |
 | `get_intersection_diff` | Compare two intersection runs to see what changed |
+| `get_current_universe` | Get the current active investment universe |
+| `list_universe_versions` | List historical universe versions |
+| `get_universe_version` | Get a specific universe version by ID |
+| `get_universe_diff` | Diff two universe versions to see what changed |
+| `get_universe_staleness` | Check how stale the current universe is |
+| `get_position_alerts` | Get position-level alerts for the universe |
+| `get_universe_overrides` | Get active manual overrides on the universe |
+| `propose_universe` | Create a universe proposal from an intersection run |
+| `get_proposal` | Get a universe proposal by ID |
+| `update_proposal_instrument` | Toggle instrument inclusion in a universe proposal |
+| `add_override_to_proposal` | Add a manual override instrument to a proposal |
+| `remove_override_from_proposal` | Remove a manual override from a proposal |
+| `commit_universe` | Commit a universe proposal, replacing the active universe |
 
 ### Research (5 tools)
 
@@ -316,7 +329,7 @@ packages/mcp-client/
       strategy.ts         # 4 tools
       instruments.ts      # 8 tools
       comments.ts         # 2 tools
-      screening.ts        # 21 tools
+      screening.ts        # 34 tools
       research.ts         # 5 tools
       valuation.ts        # 7 tools
       ic.ts               # 10 tools

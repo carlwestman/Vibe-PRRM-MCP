@@ -17,32 +17,36 @@
 
 | Tool Name | Module | Description | Parameters |
 |-----------|--------|-------------|------------|
-| `list_intersection_configs` | screening.ts | List screening intersection configurations | `status` (string, optional) |
-| `create_intersection_config` | screening.ts | Create an intersection config combining multiple profiles | `name` (string, req), `description` (string), `pipeline` (array, req), `scoring` (object) |
-| `get_intersection_config` | screening.ts | Get a specific intersection configuration | `id` (string, req) |
-| `update_intersection_config` | screening.ts | Update an intersection configuration | `id` (string, req), `name`, `description`, `pipeline`, `scoring` |
-| `delete_intersection_config` | screening.ts | Archive an intersection configuration | `id` (string, req) |
-| `run_intersection` | screening.ts | Run a screening intersection pipeline | `id` (string, req), `forceRefresh` (bool), `dryRun` (bool), `syncToUniverse` (bool), `triggeredBy` (string), `triggerType` (string) |
-| `list_intersection_runs` | screening.ts | List runs for an intersection configuration | `id` (string, req) |
-| `get_intersection_run` | screening.ts | Get a specific intersection run with results | `id` (string, req) |
-| `get_intersection_diff` | screening.ts | Compare two intersection runs to see what changed | `id` (string, req), `otherId` (string, req) |
+| `get_current_universe` | screening.ts | Get the current active investment universe | none |
+| `list_universe_versions` | screening.ts | List historical universe versions | `limit` (int), `offset` (int) |
+| `get_universe_version` | screening.ts | Get a specific universe version by ID | `id` (string, req) |
+| `get_universe_diff` | screening.ts | Diff two universe versions | `from` (int, req), `to` (int, req) |
+| `get_universe_staleness` | screening.ts | Check how stale the current universe is | none |
+| `get_position_alerts` | screening.ts | Get position-level alerts for the universe | none |
+| `get_universe_overrides` | screening.ts | Get active manual overrides | none |
+| `propose_universe` | screening.ts | Create a universe proposal from an intersection run | `intersectionRunId` (int, req), `selectedResultIds` (int[]), `overrides` (array), `proposedBy` (string) |
+| `get_proposal` | screening.ts | Get a universe proposal by ID | `id` (string, req) |
+| `update_proposal_instrument` | screening.ts | Toggle instrument inclusion in a proposal | `id` (string, req), `instId` (string, req), `included` (bool, req) |
+| `add_override_to_proposal` | screening.ts | Add a manual override instrument to a proposal | `id` (string, req), `borsdataInsId` (int, req), `displayName` (string, req), `rationale` (string, req) |
+| `remove_override_from_proposal` | screening.ts | Remove a manual override from a proposal | `id` (string, req), `instId` (string, req) |
+| `commit_universe` | screening.ts | Commit a proposal, replacing the active universe | `proposalId` (int, req) |
 
-> **Action required:** Register these 9 tools in your agent's available tool list.
+> **Action required:** Register these 13 tools in your agent's available tool list.
 
 ## No changes
 
-87 tools unchanged from previous sync.
+96 tools unchanged from previous sync.
 
 ## Full tool count
 
-Total: **96 tools** across **12 modules** (was 87 tools).
+Total: **109 tools** across **12 modules** (was 96 tools).
 
 | Module | Tools |
 |--------|-------|
 | strategy | 4 |
 | instruments | 8 |
 | comments | 2 |
-| screening | 21 |
+| screening & universe | 34 |
 | research | 5 |
 | valuation | 7 |
 | ic | 10 |
