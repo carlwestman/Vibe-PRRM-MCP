@@ -20,6 +20,18 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
   );
 
   server.tool(
+    "get_risk_report",
+    "Get a specific risk report by ID",
+    {
+      id: z.string().describe("Risk report ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/risk/reports/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
     "get_risk_dashboard",
     "Get the current risk dashboard with key metrics and alerts",
     {},
@@ -34,18 +46,14 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
     "List risk reports with optional filters",
     {
       type: z.string().optional().describe("Filter by report type"),
-      date_from: z.string().optional().describe("Start date filter (ISO format)"),
-      date_to: z.string().optional().describe("End date filter (ISO format)"),
-      limit: z.number().optional().describe("Max results"),
-      offset: z.number().optional().describe("Pagination offset"),
+      date_from: z.string().optional().describe("Start date filter (YYYY-MM-DD)"),
+      date_to: z.string().optional().describe("End date filter (YYYY-MM-DD)"),
     },
     async (params) => {
       const result = await api.get("/risk/reports", {
         type: params.type,
         date_from: params.date_from,
         date_to: params.date_to,
-        limit: params.limit?.toString(),
-        offset: params.offset?.toString(),
       });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
@@ -53,7 +61,7 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "get_alert_config",
-    "Get the current risk alert configuration",
+    "Get the current risk alert trigger configuration",
     {},
     async () => {
       const result = await api.get("/risk/alerts/config");
@@ -62,13 +70,13 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
   );
 
   server.tool(
-    "suggest_alert_change",
-    "Suggest a change to risk alert thresholds",
+    "create_risk_alert_trigger",
+    "Create a new risk alert trigger",
     {
       metric: z.string().describe("The risk metric to alert on"),
-      condition: z.string().describe("Alert condition (e.g. gt, lt, crosses)"),
+      operator: z.enum(["gt", "gte", "lt", "lte", "eq"]).describe("Comparison operator"),
       threshold: z.number().describe("Threshold value"),
-      severity: z.string().describe("Alert severity (info, warning, critical)"),
+      enabled: z.boolean().optional().describe("Whether the trigger is enabled (default: true)"),
     },
     async (params) => {
       const result = await api.post("/risk/alerts/config", params);
@@ -77,34 +85,53 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
   );
 
   server.tool(
-    "record_alert_event",
-    "Record a risk alert event when a threshold is breached",
+    "update_risk_alert_trigger",
+    "Update an existing risk alert trigger",
     {
-      trigger_id: z.string().describe("Alert trigger ID"),
-      metric_value: z.number().describe("The metric value that triggered the alert"),
+      id: z.string().describe("Alert trigger ID"),
+      metric: z.string().optional().describe("Updated metric"),
+      operator: z.enum(["gt", "gte", "lt", "lte", "eq"]).optional().describe("Updated operator"),
+      threshold: z.number().optional().describe("Updated threshold"),
+      enabled: z.boolean().optional().describe("Enable or disable the trigger"),
     },
-    async (params) => {
-      const result = await api.post("/risk/alerts/events", params);
+    async ({ id, ...rest }) => {
+      const result = await api.patch(`/risk/alerts/config/${id}`, rest);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
 
   server.tool(
-    "get_risk_decomposition",
-    "Get portfolio risk decomposition (factor exposures, contribution to risk)",
-    {},
-    async () => {
-      const result = await api.get("/risk/decomposition");
+    "delete_risk_alert_trigger",
+    "Delete a risk alert trigger",
+    {
+      id: z.string().describe("Alert trigger ID to delete"),
+    },
+    async ({ id }) => {
+      const result = await api.delete(`/risk/alerts/config/${id}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
 
   server.tool(
-    "get_holdings_for_optimizer",
-    "Get current holdings in a format suitable for portfolio optimization",
+    "list_risk_alert_events",
+    "List risk alert events that have been triggered",
     {},
     async () => {
-      const result = await api.get("/risk/holdings-for-optimizer");
+      const result = await api.get("/risk/alerts/events");
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "acknowledge_risk_alert_event",
+    "Acknowledge a risk alert event",
+    {
+      id: z.string().describe("Alert event ID"),
+      acknowledged: z.boolean().describe("Set to true to acknowledge"),
+      acknowledgedBy: z.string().optional().describe("Person acknowledging the alert"),
+    },
+    async ({ id, ...rest }) => {
+      const result = await api.patch(`/risk/alerts/events/${id}`, rest);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

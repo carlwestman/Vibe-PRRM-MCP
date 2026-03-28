@@ -7,41 +7,34 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
     "create_ic_meeting",
     "Create a new investment committee meeting",
     {
-      meeting_date: z.string().describe("Meeting date in ISO format (YYYY-MM-DD or full ISO)"),
+      meetingDate: z.string().describe("Meeting date (YYYY-MM-DD)"),
     },
-    async ({ meeting_date }) => {
-      const result = await api.post("/ic/meetings", { meetingDate: meeting_date });
+    async ({ meetingDate }) => {
+      const result = await api.post("/ic/meetings", { meetingDate });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
 
   server.tool(
-    "update_meeting_status",
-    "Update the status of an IC meeting (e.g. scheduled, in_progress, completed)",
+    "update_ic_meeting",
+    "Update an IC meeting (status and/or date)",
     {
       id: z.string().describe("Meeting ID"),
-      status: z.string().describe("New status (scheduled, in_progress, completed, cancelled)"),
+      status: z.string().optional().describe("New status"),
+      meetingDate: z.string().optional().describe("Updated meeting date (YYYY-MM-DD)"),
     },
-    async ({ id, status }) => {
-      const result = await api.patch(`/ic/meetings/${id}`, { status });
+    async ({ id, ...rest }) => {
+      const result = await api.patch(`/ic/meetings/${id}`, rest);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
 
   server.tool(
     "list_ic_meetings",
-    "List investment committee meetings with optional filters",
-    {
-      status: z.string().optional().describe("Filter by meeting status"),
-      limit: z.number().optional().describe("Max results"),
-      offset: z.number().optional().describe("Pagination offset"),
-    },
-    async (params) => {
-      const result = await api.get("/ic/meetings", {
-        status: params.status,
-        limit: params.limit?.toString(),
-        offset: params.offset?.toString(),
-      });
+    "List investment committee meetings",
+    {},
+    async () => {
+      const result = await api.get("/ic/meetings");
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -64,73 +57,12 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
     {
       meeting_id: z.string().describe("Meeting ID"),
       title: z.string().describe("Agenda item title"),
-      type: z.string().optional().describe("Item type (e.g. new_position, review, risk)"),
-      instrument_id: z.string().optional().describe("Associated instrument ID"),
-      research_id: z.string().optional().describe("Associated research report ID"),
+      instrumentId: z.number().optional().describe("Associated instrument ID"),
       presenter: z.string().optional().describe("Who will present this item"),
-      notes: z.string().optional().describe("Additional notes"),
+      order: z.number().optional().describe("Display order"),
     },
     async ({ meeting_id, ...rest }) => {
       const result = await api.post(`/ic/meetings/${meeting_id}/agenda`, rest);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "update_agenda_item",
-    "Update an agenda item on an IC meeting",
-    {
-      meeting_id: z.string().describe("Meeting ID"),
-      id: z.string().describe("Agenda item ID"),
-      title: z.string().optional().describe("Updated title"),
-      type: z.string().optional().describe("Updated type"),
-      presenter: z.string().optional().describe("Updated presenter"),
-      notes: z.string().optional().describe("Updated notes"),
-      decision: z.string().optional().describe("Decision recorded for this item"),
-    },
-    async ({ meeting_id, ...rest }) => {
-      const result = await api.patch(`/ic/meetings/${meeting_id}/agenda`, rest);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "remove_agenda_item",
-    "Remove an agenda item from an IC meeting",
-    {
-      meeting_id: z.string().describe("Meeting ID"),
-      id: z.string().describe("Agenda item ID to remove"),
-    },
-    async ({ meeting_id, id }) => {
-      const result = await api.delete(`/ic/meetings/${meeting_id}/agenda/${id}`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "reorder_agenda_items",
-    "Reorder agenda items on an IC meeting",
-    {
-      meeting_id: z.string().describe("Meeting ID"),
-      ordered_ids: z.array(z.string()).describe("Agenda item IDs in desired order"),
-    },
-    async ({ meeting_id, ordered_ids }) => {
-      const result = await api.put(`/ic/meetings/${meeting_id}/agenda/reorder`, { ordered_ids });
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "post_preread",
-    "Upload a pre-read document for an agenda item",
-    {
-      agenda_item_id: z.string().describe("Agenda item ID"),
-      title: z.string().describe("Pre-read title"),
-      content: z.string().describe("Pre-read content in markdown"),
-      author: z.string().describe("Author of the pre-read"),
-    },
-    async ({ agenda_item_id, ...rest }) => {
-      const result = await api.post(`/ic/agenda/${agenda_item_id}/prereads`, rest);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -140,11 +72,10 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
     "Post minutes for an IC meeting",
     {
       meeting_id: z.string().describe("Meeting ID"),
-      body: z.string().describe("Minutes content in markdown"),
-      author: z.string().describe("Author of the minutes"),
+      minutes: z.string().describe("Minutes content in markdown"),
     },
-    async ({ meeting_id, body, author }) => {
-      const result = await api.post(`/ic/meetings/${meeting_id}/minutes`, { body, author });
+    async ({ meeting_id, minutes }) => {
+      const result = await api.post(`/ic/meetings/${meeting_id}/minutes`, { minutes });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -154,11 +85,10 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
     "Update existing minutes for an IC meeting",
     {
       meeting_id: z.string().describe("Meeting ID"),
-      id: z.string().describe("Minutes record ID"),
-      body: z.string().describe("Updated minutes content"),
+      minutes: z.string().describe("Updated minutes content"),
     },
-    async ({ meeting_id, id, body }) => {
-      const result = await api.patch(`/ic/meetings/${meeting_id}/minutes`, { id, body });
+    async ({ meeting_id, minutes }) => {
+      const result = await api.patch(`/ic/meetings/${meeting_id}/minutes`, { minutes });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -167,10 +97,11 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
     "record_decision",
     "Record a decision from an IC meeting",
     {
-      meeting_id: z.string().describe("Meeting ID where decision was made"),
-      text: z.string().describe("Decision text"),
-      assignee: z.string().optional().describe("Person assigned to execute the decision"),
-      due_date: z.string().optional().describe("Due date for the decision action (ISO format)"),
+      meetingId: z.number().describe("Meeting ID where decision was made"),
+      decision: z.enum(["approve", "reject", "defer", "modify"]).describe("Decision outcome"),
+      instrumentId: z.number().optional().describe("Related instrument ID"),
+      rationale: z.string().optional().describe("Rationale for the decision"),
+      author: z.string().optional().describe("Person recording the decision"),
     },
     async (params) => {
       const result = await api.post("/ic/decisions", params);
@@ -183,33 +114,20 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
     "Update the status of an IC decision",
     {
       id: z.string().describe("Decision ID"),
-      status: z.string().describe("New status (pending, in_progress, completed, cancelled)"),
-      note: z.string().optional().describe("Optional note about the status change"),
+      status: z.enum(["pending", "executed", "cancelled"]).describe("New status"),
     },
-    async ({ id, status, note }) => {
-      const result = await api.patch(`/ic/decisions/${id}`, { status, note });
+    async ({ id, status }) => {
+      const result = await api.patch(`/ic/decisions/${id}`, { status });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
 
   server.tool(
     "list_decisions",
-    "List IC decisions with optional filters",
-    {
-      status: z.string().optional().describe("Filter by decision status"),
-      meeting_id: z.string().optional().describe("Filter by meeting ID"),
-      assignee: z.string().optional().describe("Filter by assignee"),
-      limit: z.number().optional().describe("Max results"),
-      offset: z.number().optional().describe("Pagination offset"),
-    },
-    async (params) => {
-      const result = await api.get("/ic/decisions", {
-        status: params.status,
-        meeting_id: params.meeting_id,
-        assignee: params.assignee,
-        limit: params.limit?.toString(),
-        offset: params.offset?.toString(),
-      });
+    "List IC decisions",
+    {},
+    async () => {
+      const result = await api.get("/ic/decisions");
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

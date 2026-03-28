@@ -118,17 +118,18 @@ Add the following to your `openclaw.json`:
 
 ## Tool Catalog
 
-The server exposes 68 tools across 11 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
+The server exposes 87 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
 
-### Strategy (3 tools)
+### Strategy (4 tools)
 
 | Tool | Description |
 |------|-------------|
 | `get_strategy` | Get the current investment strategy document |
 | `get_strategy_versions` | Get all versions of the investment strategy document |
+| `get_strategy_version` | Get a specific strategy version by ID |
 | `update_strategy` | Update the investment strategy document with new content |
 
-### Instruments (4 tools)
+### Instruments (8 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -136,6 +137,10 @@ The server exposes 68 tools across 11 modules. Every tool maps 1:1 to a PRRM RES
 | `get_instrument` | Get detailed information about a specific instrument by ID |
 | `create_instrument` | Create a new instrument in the system |
 | `update_instrument` | Update fields on an existing instrument |
+| `add_external_id` | Add an external identifier to an instrument |
+| `remove_external_id` | Remove an external identifier from an instrument |
+| `search_borsdata_instruments` | Search Borsdata for instruments to import |
+| `search_yahoo_instruments` | Search Yahoo Finance for instruments to import |
 
 ### Comments (2 tools)
 
@@ -144,7 +149,7 @@ The server exposes 68 tools across 11 modules. Every tool maps 1:1 to a PRRM RES
 | `get_comments` | Get comments for an instrument or research report |
 | `add_comment` | Add a comment to an instrument or research report |
 
-### Screening (9 tools)
+### Screening (12 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -152,13 +157,16 @@ The server exposes 68 tools across 11 modules. Every tool maps 1:1 to a PRRM RES
 | `get_screening_profile` | Get a specific screening profile by ID |
 | `create_screening_profile` | Create a new screening profile with criteria and thresholds |
 | `update_screening_profile` | Update an existing screening profile |
+| `delete_screening_profile` | Delete a screening profile |
 | `run_screen` | Execute a screening profile to find matching instruments |
 | `get_screen_results` | Get results from a completed screening run |
+| `create_instruments_from_screening` | Create instruments from screening run results |
 | `get_available_kpis` | Get available KPIs for screening criteria |
 | `get_screening_classifications` | Get available screening classifications |
 | `get_universe` | Get the instrument universe with optional filters |
+| `update_universe_entry` | Flag or dismiss an instrument in the universe |
 
-### Research (6 tools)
+### Research (5 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -166,10 +174,9 @@ The server exposes 68 tools across 11 modules. Every tool maps 1:1 to a PRRM RES
 | `get_research_report` | Get a specific research report by ID |
 | `create_research_report` | Create a new research report |
 | `update_research_report` | Update an existing research report |
-| `link_valuation_to_research` | Link a valuation output to a research report |
 | `search_research_semantic` | Semantic search across research reports |
 
-### Valuation (8 tools)
+### Valuation (7 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -180,28 +187,23 @@ The server exposes 68 tools across 11 modules. Every tool maps 1:1 to a PRRM RES
 | `execute_valuation` | Execute a valuation model against an instrument with input data |
 | `get_valuation_output` | Get a specific valuation output by ID |
 | `list_valuations_by_instrument` | List all valuation outputs for a specific instrument |
-| `link_valuation_to_report` | Link a valuation output to a research report |
 
-### Investment Committee (14 tools)
+### Investment Committee (10 tools)
 
 | Tool | Description |
 |------|-------------|
 | `create_ic_meeting` | Create a new investment committee meeting |
-| `update_meeting_status` | Update the status of an IC meeting |
-| `list_ic_meetings` | List investment committee meetings with optional filters |
+| `update_ic_meeting` | Update an IC meeting (status and/or date) |
+| `list_ic_meetings` | List investment committee meetings |
 | `get_ic_meeting` | Get detailed information about a specific IC meeting |
 | `add_agenda_item` | Add an agenda item to an IC meeting |
-| `update_agenda_item` | Update an agenda item on an IC meeting |
-| `remove_agenda_item` | Remove an agenda item from an IC meeting |
-| `reorder_agenda_items` | Reorder agenda items on an IC meeting |
-| `post_preread` | Upload a pre-read document for an agenda item |
 | `post_minutes` | Post minutes for an IC meeting |
 | `update_minutes` | Update existing minutes for an IC meeting |
 | `record_decision` | Record a decision from an IC meeting |
 | `update_decision_status` | Update the status of an IC decision |
-| `list_decisions` | List IC decisions with optional filters |
+| `list_decisions` | List IC decisions |
 
-### Portfolio (9 tools)
+### Portfolio (7 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -212,36 +214,58 @@ The server exposes 68 tools across 11 modules. Every tool maps 1:1 to a PRRM RES
 | `get_portfolio_summary` | Get a high-level portfolio summary including NAV, returns, and key metrics |
 | `get_allocation` | Get portfolio allocation breakdown |
 | `get_fx_exposure` | Get portfolio foreign exchange exposure breakdown |
-| `recalculate_positions` | Trigger recalculation of all portfolio positions from trade history |
-| `snapshot_portfolio` | Trigger a portfolio snapshot as part of the daily update process |
 
-### Risk (8 tools)
+### Performance (9 tools)
+
+| Tool | Description |
+|------|-------------|
+| `get_performance_summary` | Get portfolio performance summary for a given period |
+| `get_return_series` | Get portfolio and benchmark return time series |
+| `get_performance_attribution` | Get performance attribution by position, sector, or currency |
+| `get_drawdown_analysis` | Get portfolio drawdown analysis |
+| `get_benchmark_config` | Get the current benchmark configuration |
+| `set_benchmark` | Set a benchmark instrument for performance comparison |
+| `list_performance_reports` | List performance reports with optional filters |
+| `create_performance_report` | Create a new performance report |
+| `get_performance_report` | Get a specific performance report by ID |
+
+### Risk (10 tools)
 
 | Tool | Description |
 |------|-------------|
 | `publish_risk_report` | Publish a new risk report |
+| `get_risk_report` | Get a specific risk report by ID |
 | `get_risk_dashboard` | Get the current risk dashboard with key metrics and alerts |
 | `list_risk_reports` | List risk reports with optional filters |
-| `get_alert_config` | Get the current risk alert configuration |
-| `suggest_alert_change` | Suggest a change to risk alert thresholds |
-| `record_alert_event` | Record a risk alert event when a threshold is breached |
-| `get_risk_decomposition` | Get portfolio risk decomposition (factor exposures, contribution to risk) |
-| `get_holdings_for_optimizer` | Get current holdings in a format suitable for portfolio optimization |
+| `get_alert_config` | Get the current risk alert trigger configuration |
+| `create_risk_alert_trigger` | Create a new risk alert trigger |
+| `update_risk_alert_trigger` | Update an existing risk alert trigger |
+| `delete_risk_alert_trigger` | Delete a risk alert trigger |
+| `list_risk_alert_events` | List risk alert events |
+| `acknowledge_risk_alert_event` | Acknowledge a risk alert event |
 
-### Notifications (2 tools)
+### Notifications (4 tools)
 
 | Tool | Description |
 |------|-------------|
 | `get_notifications` | Get notifications with optional filters |
 | `get_unread_notification_count` | Get the count of unread notifications |
+| `mark_notification_read` | Mark a specific notification as read |
+| `mark_all_notifications_read` | Mark all notifications as read |
 
-### Platform (3 tools)
+### Platform (9 tools)
 
 | Tool | Description |
 |------|-------------|
 | `global_search` | Search across all PRRM entities (instruments, research, meetings, etc.) |
 | `get_tool_catalog` | Get the full catalog of available PRRM MCP tools organized by module |
-| `trigger_daily_update` | Trigger the PRRM daily update process (recalculates positions, snapshots portfolio) |
+| `trigger_daily_update` | Trigger the PRRM daily update process |
+| `health_check` | Check PRRM server health status |
+| `get_settings` | Get PRRM application settings |
+| `update_setting` | Update a PRRM application setting |
+| `get_webhook_config` | Get outbound webhook configuration |
+| `update_webhook_config` | Update outbound webhook configuration |
+| `test_webhook` | Send a test webhook to the configured URL |
 
 ## MCP Resources
 
@@ -280,17 +304,18 @@ packages/mcp-client/
     index.ts              # Entry point, MCP server setup, guide resource
     api-client.ts         # HTTP client wrapper (fetch + auth + error handling)
     tools/
-      strategy.ts         # 3 tools
-      instruments.ts      # 4 tools
+      strategy.ts         # 4 tools
+      instruments.ts      # 8 tools
       comments.ts         # 2 tools
-      screening.ts        # 9 tools
-      research.ts         # 6 tools
-      valuation.ts        # 8 tools
-      ic.ts               # 14 tools
-      portfolio.ts        # 9 tools
-      risk.ts             # 8 tools
-      notifications.ts    # 2 tools
-      platform.ts         # 3 tools
+      screening.ts        # 12 tools
+      research.ts         # 5 tools
+      valuation.ts        # 7 tools
+      ic.ts               # 10 tools
+      portfolio.ts        # 7 tools
+      performance.ts      # 9 tools
+      risk.ts             # 10 tools
+      notifications.ts    # 4 tools
+      platform.ts         # 9 tools
 ```
 
 ### Build

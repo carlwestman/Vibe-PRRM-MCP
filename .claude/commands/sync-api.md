@@ -47,4 +47,63 @@ For approved changes:
 8. Update the tool count in `README.md` if tools were added or removed.
 9. Present a summary of all changes made.
 
+## Step 6: Write change documentation
+
+After implementation, generate `docs/CHANGELOG_LATEST.md` (overwrite each sync). This file is designed to be handed off to the team building the agent orchestration system so they know exactly what changed and what to do about it.
+
+Use this exact format:
+
+```markdown
+# PRRM MCP — Change Report
+
+**Date:** YYYY-MM-DD
+**MCP Package Version:** (read from package.json)
+**Repo:** https://github.com/carlwestman/Vibe-PRRM-MCP
+
+## How to update
+
+1. Pull the latest version:
+   ```bash
+   npm install github:carlwestman/Vibe-PRRM-MCP
+   # or: cd Vibe-PRRM-MCP && git pull && cd packages/mcp-client && npm install && npm run build
+   ```
+2. Review the tool changes below and update your agent tool configurations accordingly.
+
+## New tools added
+
+| Tool Name | Module | Description | Parameters |
+|-----------|--------|-------------|------------|
+| `tool_name` | module.ts | What it does | `param1` (string, required), `param2` (number, optional) |
+
+> **Action required:** Register these tools in your agent's available tool list.
+
+## Updated tools (parameter changes)
+
+| Tool Name | Change Type | Details |
+|-----------|-------------|---------|
+| `tool_name` | added param | `new_param` (string, optional) — description |
+| `tool_name` | removed param | `old_param` was removed |
+| `tool_name` | type change | `param` changed from string to number |
+
+> **Action required:** Update tool schemas/configs in your agent orchestration to match the new signatures.
+
+## Removed tools
+
+| Tool Name | Was In Module | Replacement |
+|-----------|---------------|-------------|
+| `tool_name` | module.ts | Use `other_tool` instead / No replacement |
+
+> **Action required:** Remove these tools from your agent's available tool list.
+
+## No changes
+
+X tools unchanged.
+
+## Full tool count
+
+Total: N tools across M modules.
+```
+
+Omit any section that has no entries (e.g. if nothing was removed, skip "Removed tools" entirely). Keep the action-required callouts so the downstream team knows exactly what to do.
+
 Do NOT commit — let the user decide when to commit.

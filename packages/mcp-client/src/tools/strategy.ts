@@ -24,11 +24,23 @@ export function registerStrategyTools(server: McpServer, api: PrrmApiClient) {
   );
 
   server.tool(
+    "get_strategy_version",
+    "Get a specific strategy version by ID",
+    {
+      id: z.string().describe("Strategy version ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/strategy/versions/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
     "update_strategy",
     "Update the investment strategy document with new content",
     {
       content: z.string().describe("The full updated strategy content in markdown"),
-      author: z.string().describe("Name of the person making the update"),
+      author: z.string().optional().describe("Author of the change"),
     },
     async ({ content, author }) => {
       const result = await api.put("/strategy", { content, author });

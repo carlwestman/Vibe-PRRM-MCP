@@ -30,4 +30,26 @@ export function registerNotificationTools(server: McpServer, api: PrrmApiClient)
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
+
+  server.tool(
+    "mark_notification_read",
+    "Mark a specific notification as read",
+    {
+      id: z.string().describe("Notification ID"),
+    },
+    async ({ id }) => {
+      const result = await api.patch(`/notifications/${id}/read`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "mark_all_notifications_read",
+    "Mark all notifications as read",
+    {},
+    async () => {
+      const result = await api.post("/notifications/mark-all-read");
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
 }

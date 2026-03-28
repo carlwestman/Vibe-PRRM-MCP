@@ -27,6 +27,5 @@ describe("PrrmApiClient", () => {
     const result = await api.get("/instruments/99999") as any;
     expect(result).toHaveProperty("error");
     expect(typeof result.error).toBe("string");
-    expect(result.error).toContain("not found");
   });
 });

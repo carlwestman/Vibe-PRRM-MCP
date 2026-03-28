@@ -28,15 +28,10 @@ export function registerCommentTools(server: McpServer, api: PrrmApiClient) {
       entity_type: z.enum(["instrument", "research"]).describe("Type of parent entity"),
       entity_id: z.string().describe("ID of the parent entity"),
       body: z.string().describe("Comment text"),
-      author: z.string().describe("Name of the commenter"),
-      parent_id: z.string().optional().describe("ID of parent comment for threaded replies"),
+      author: z.string().optional().describe("Name of the commenter"),
     },
-    async ({ entity_type, entity_id, body, author, parent_id }) => {
-      const result = await api.post(entityBasePath(entity_type, entity_id), {
-        body,
-        author,
-        parent_id,
-      });
+    async ({ entity_type, entity_id, body, author }) => {
+      const result = await api.post(entityBasePath(entity_type, entity_id), { body, author });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

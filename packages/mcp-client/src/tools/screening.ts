@@ -30,13 +30,15 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
     "Create a new screening profile with criteria and thresholds",
     {
       name: z.string().describe("Profile name"),
+      scope: z.string().describe("Screening scope (e.g. nordic, global)"),
       description: z.string().optional().describe("Profile description"),
       criteria: z.array(z.object({
-        kpi: z.string().describe("KPI identifier"),
+        field: z.string().describe("Field/KPI identifier"),
         operator: z.string().describe("Comparison operator (gt, lt, gte, lte, eq)"),
-        value: z.number().describe("Threshold value"),
+        value: z.any().describe("Threshold value"),
       })).describe("Screening criteria"),
-      universe: z.string().optional().describe("Universe to screen against"),
+      includeFilters: z.record(z.any()).optional().describe("Include filters"),
+      excludeFilters: z.record(z.any()).optional().describe("Exclude filters"),
     },
     async (params) => {
       const result = await api.post("/screening/profiles", params);
@@ -50,16 +52,30 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
     {
       id: z.string().describe("Profile ID to update"),
       name: z.string().optional().describe("Updated name"),
+      scope: z.string().optional().describe("Updated scope"),
       description: z.string().optional().describe("Updated description"),
       criteria: z.array(z.object({
-        kpi: z.string().describe("KPI identifier"),
+        field: z.string().describe("Field/KPI identifier"),
         operator: z.string().describe("Comparison operator"),
-        value: z.number().describe("Threshold value"),
+        value: z.any().describe("Threshold value"),
       })).optional().describe("Updated criteria"),
-      universe: z.string().optional().describe("Updated universe"),
+      includeFilters: z.record(z.any()).optional().describe("Updated include filters"),
+      excludeFilters: z.record(z.any()).optional().describe("Updated exclude filters"),
     },
     async ({ id, ...rest }) => {
       const result = await api.patch(`/screening/profiles/${id}`, rest);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "delete_screening_profile",
+    "Delete a screening profile",
+    {
+      id: z.string().describe("Screening profile ID to delete"),
+    },
+    async ({ id }) => {
+      const result = await api.delete(`/screening/profiles/${id}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -89,6 +105,19 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
   );
 
   server.tool(
+    "create_instruments_from_screening",
+    "Create instruments from screening run results",
+    {
+      id: z.string().describe("Screening run ID"),
+      resultIds: z.array(z.number()).describe("IDs of screening results to create instruments from"),
+    },
+    async ({ id, resultIds }) => {
+      const result = await api.post(`/screening/runs/${id}/create-instruments`, { resultIds });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
     "get_available_kpis",
     "Get available KPIs for screening criteria",
     {
@@ -106,7 +135,7 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "get_screening_classifications",
-    "Get available screening classifications",
+    "Get available screening classifications (countries, markets, sectors, branches)",
     {},
     async () => {
       const result = await api.get("/screening/classifications");
@@ -118,14 +147,29 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
     "get_universe",
     "Get the instrument universe with optional filters",
     {
-      flagged: z.boolean().optional().describe("Filter to flagged instruments only"),
-      dismissed: z.boolean().optional().describe("Filter to dismissed instruments only"),
+      flagged_only: z.boolean().optional().describe("Filter to flagged instruments only"),
+      limit: z.number().optional().describe("Max results (default 50)"),
+      offset: z.number().optional().describe("Pagination offset"),
     },
     async (params) => {
       const result = await api.get("/universe", {
-        flagged: params.flagged?.toString(),
-        dismissed: params.dismissed?.toString(),
+        flagged_only: params.flagged_only?.toString(),
+        limit: params.limit?.toString(),
+        offset: params.offset?.toString(),
       });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "update_universe_entry",
+    "Flag or dismiss an instrument in the universe",
+    {
+      id: z.string().describe("Universe entry ID"),
+      action: z.enum(["flag", "dismiss"]).describe("Action to take on the entry"),
+    },
+    async ({ id, action }) => {
+      const result = await api.patch(`/universe/${id}`, { action });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

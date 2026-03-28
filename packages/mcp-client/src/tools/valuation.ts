@@ -30,9 +30,10 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     "Create a new valuation model template",
     {
       name: z.string().describe("Model name"),
-      type: z.string().describe("Model type (e.g. dcf, comps, nav)"),
+      type: z.enum(["dcf", "comparables", "ddm", "nav", "custom"]).describe("Model type"),
+      template: z.record(z.any()).describe("Model template definition"),
       description: z.string().optional().describe("Model description"),
-      schema: z.record(z.any()).optional().describe("Input schema for the model"),
+      author: z.string().optional().describe("Model author"),
     },
     async (params) => {
       const result = await api.post("/valuation/models", params);
@@ -47,7 +48,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
       id: z.string().describe("Model ID to update"),
       name: z.string().optional().describe("Updated name"),
       description: z.string().optional().describe("Updated description"),
-      schema: z.record(z.any()).optional().describe("Updated input schema"),
+      template: z.record(z.any()).optional().describe("Updated template definition"),
     },
     async ({ id, ...rest }) => {
       const result = await api.patch(`/valuation/models/${id}`, rest);
@@ -90,21 +91,6 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     },
     async ({ instrument_id }) => {
       const result = await api.get("/valuation/outputs", { instrument_id });
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "link_valuation_to_report",
-    "Link a valuation output to a research report",
-    {
-      report_id: z.string().describe("Research report ID"),
-      valuation_output_id: z.string().describe("Valuation output ID to link"),
-    },
-    async ({ report_id, valuation_output_id }) => {
-      const result = await api.post(`/research/${report_id}/link-valuation`, {
-        valuation_output_id,
-      });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

@@ -1,6 +1,6 @@
 # PRRM MCP Tool Reference
 
-Complete reference for all 68 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
+Complete reference for all 87 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
 
 All parameters are validated with Zod schemas before the API call is made. Tool results are returned as JSON text content. Errors are never thrown -- they are returned as text so the agent can read and react to them.
 
@@ -8,17 +8,18 @@ All parameters are validated with Zod schemas before the API call is made. Tool 
 
 ## Table of Contents
 
-- [Strategy](#strategy)
-- [Instruments](#instruments)
-- [Comments](#comments)
-- [Screening](#screening)
-- [Research](#research)
-- [Valuation](#valuation)
-- [Investment Committee](#investment-committee)
-- [Portfolio](#portfolio)
-- [Risk](#risk)
-- [Notifications](#notifications)
-- [Platform](#platform)
+- [Strategy](#strategy) (4 tools)
+- [Instruments](#instruments) (8 tools)
+- [Comments](#comments) (2 tools)
+- [Screening](#screening) (12 tools)
+- [Research](#research) (5 tools)
+- [Valuation](#valuation) (7 tools)
+- [Investment Committee](#investment-committee) (10 tools)
+- [Portfolio](#portfolio) (7 tools)
+- [Performance](#performance) (9 tools)
+- [Risk](#risk) (10 tools)
+- [Notifications](#notifications) (4 tools)
+- [Platform](#platform) (9 tools)
 - [Error Handling](#error-handling)
 - [MCP Resources](#mcp-resources)
 
@@ -30,9 +31,11 @@ All parameters are validated with Zod schemas before the API call is made. Tool 
 
 Get the current investment strategy document.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/strategy`
+**Endpoint:** `GET /strategy`
 
 ---
 
@@ -40,9 +43,23 @@ Get the current investment strategy document.
 
 Get all versions of the investment strategy document.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/strategy/versions`
+**Endpoint:** `GET /strategy/versions`
+
+---
+
+### `get_strategy_version`
+
+Get a specific strategy version by ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Strategy version ID |
+
+**Endpoint:** `GET /strategy/versions/{id}`
 
 ---
 
@@ -52,11 +69,10 @@ Update the investment strategy document with new content.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `content` | string | Yes | The full updated strategy content in markdown |
-| `author` | string | Yes | Name of the person making the update |
+| `content` | string | required | The full updated strategy content in markdown |
+| `author` | string | optional | Author of the change |
 
-**Endpoint:** `PUT /api/v1/strategy`
-**Body:** `{ content, author }`
+**Endpoint:** `PUT /strategy`
 
 ---
 
@@ -68,15 +84,14 @@ Search for instruments by name, asset class, status, or sector.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `q` | string | No | Search query string |
-| `asset_class` | string | No | Filter by asset class (e.g. equity, fixed_income) |
-| `status` | string | No | Filter by status (e.g. active, watchlist, excluded) |
-| `sector` | string | No | Filter by sector |
-| `limit` | number | No | Max results to return |
-| `offset` | number | No | Offset for pagination |
+| `q` | string | optional | Search query string |
+| `assetClass` | string | optional | Filter by asset class (e.g. Equity, Fixed Income) |
+| `status` | string | optional | Filter by status (e.g. Active, Inactive, Delisted) |
+| `sector` | string | optional | Filter by sector |
+| `limit` | number | optional | Max results to return |
+| `offset` | number | optional | Offset for pagination |
 
-**Endpoint:** `GET /api/v1/instruments`
-**Query params:** `q, asset_class, status, sector, limit, offset`
+**Endpoint:** `GET /instruments`
 
 ---
 
@@ -86,9 +101,9 @@ Get detailed information about a specific instrument by ID.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | The instrument ID |
+| `id` | string | required | The instrument ID |
 
-**Endpoint:** `GET /api/v1/instruments/{id}`
+**Endpoint:** `GET /instruments/{id}`
 
 ---
 
@@ -98,17 +113,18 @@ Create a new instrument in the system.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `name` | string | Yes | Instrument name |
-| `ticker` | string | No | Ticker symbol |
-| `isin` | string | No | ISIN code |
-| `asset_class` | string | Yes | Asset class (e.g. equity, fixed_income, commodity) |
-| `currency` | string | No | Currency code (e.g. USD, EUR) |
-| `sector` | string | No | Sector classification |
-| `country` | string | No | Country of domicile |
-| `exchange` | string | No | Primary exchange |
+| `displayName` | string | required | Instrument display name |
+| `ticker` | string | optional | Ticker symbol |
+| `assetClass` | string | required | Asset class (e.g. Equity, Fixed Income, Commodity) |
+| `currency` | string | required | Currency code (e.g. USD, EUR, SEK) |
+| `sector` | string | optional | Sector classification |
+| `country` | string | optional | Country of domicile |
+| `exchange` | string | optional | Primary exchange |
+| `status` | enum: `Active`, `Inactive`, `Delisted` | optional | Instrument status (default: Active) |
+| `tags` | string[] | optional | Tags for categorization |
+| `externalIds` | array of `{source: string, externalId: string}` | optional | External system identifiers |
 
-**Endpoint:** `POST /api/v1/instruments`
-**Body:** All fields
+**Endpoint:** `POST /instruments`
 
 ---
 
@@ -118,27 +134,73 @@ Update fields on an existing instrument.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | The instrument ID to update |
-| `name` | string | No | Updated name |
-| `ticker` | string | No | Updated ticker |
-| `isin` | string | No | Updated ISIN |
-| `asset_class` | string | No | Updated asset class |
-| `currency` | string | No | Updated currency |
-| `sector` | string | No | Updated sector |
-| `country` | string | No | Updated country |
-| `exchange` | string | No | Updated exchange |
-| `status` | string | No | Updated status |
+| `id` | string | required | The instrument ID to update |
+| `displayName` | string | optional | Updated display name |
+| `ticker` | string | optional | Updated ticker |
+| `assetClass` | string | optional | Updated asset class |
+| `currency` | string | optional | Updated currency |
+| `sector` | string | optional | Updated sector |
+| `country` | string | optional | Updated country |
+| `exchange` | string | optional | Updated exchange |
+| `status` | enum: `Active`, `Inactive`, `Delisted` | optional | Updated status |
+| `tags` | string[] | optional | Updated tags |
 
-**Endpoint:** `PATCH /api/v1/instruments/{id}`
-**Body:** All fields except `id`
+**Endpoint:** `PATCH /instruments/{id}`
+
+---
+
+### `add_external_id`
+
+Add an external identifier to an instrument.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Instrument ID |
+| `source` | string | required | External data source (e.g. bloomberg, refinitiv, borsdata) |
+| `externalId` | string | required | ID in the external system |
+
+**Endpoint:** `POST /instruments/{id}/external-ids`
+
+---
+
+### `remove_external_id`
+
+Remove an external identifier from an instrument.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Instrument ID |
+| `extId` | string | required | External ID record to remove |
+
+**Endpoint:** `DELETE /instruments/{id}/external-ids/{extId}`
+
+---
+
+### `search_borsdata_instruments`
+
+Search Borsdata for instruments to import.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `q` | string | required | Search query (minimum 2 characters) |
+
+**Endpoint:** `GET /instruments/import`
+
+---
+
+### `search_yahoo_instruments`
+
+Search Yahoo Finance for instruments to import.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `q` | string | required | Search query |
+
+**Endpoint:** `GET /instruments/import-yahoo`
 
 ---
 
 ## Comments
-
-Comments are accessed through the parent entity's endpoint. The `entity_type` parameter determines the base path:
-- `entity_type: "instrument"` uses `/instruments/{id}/comments`
-- `entity_type: "research"` uses `/research/{id}/comments`
 
 ### `get_comments`
 
@@ -146,10 +208,10 @@ Get comments for an instrument or research report.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `entity_type` | enum: `"instrument"`, `"research"` | Yes | Type of parent entity |
-| `entity_id` | string | Yes | ID of the parent entity |
+| `entity_type` | enum: `instrument`, `research` | required | Type of parent entity |
+| `entity_id` | string | required | ID of the parent entity |
 
-**Endpoint:** `GET /api/v1/instruments/{entity_id}/comments` or `GET /api/v1/research/{entity_id}/comments`
+**Endpoint:** `GET /instruments/{entity_id}/comments` or `GET /research/{entity_id}/comments` (based on `entity_type`)
 
 ---
 
@@ -159,14 +221,12 @@ Add a comment to an instrument or research report.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `entity_type` | enum: `"instrument"`, `"research"` | Yes | Type of parent entity |
-| `entity_id` | string | Yes | ID of the parent entity |
-| `body` | string | Yes | Comment text |
-| `author` | string | Yes | Name of the commenter |
-| `parent_id` | string | No | ID of parent comment for threaded replies |
+| `entity_type` | enum: `instrument`, `research` | required | Type of parent entity |
+| `entity_id` | string | required | ID of the parent entity |
+| `body` | string | required | Comment text |
+| `author` | string | optional | Name of the commenter |
 
-**Endpoint:** `POST /api/v1/instruments/{entity_id}/comments` or `POST /api/v1/research/{entity_id}/comments`
-**Body:** `{ body, author, parent_id }`
+**Endpoint:** `POST /instruments/{entity_id}/comments` or `POST /research/{entity_id}/comments` (based on `entity_type`)
 
 ---
 
@@ -176,9 +236,11 @@ Add a comment to an instrument or research report.
 
 List all screening profiles.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/screening/profiles`
+**Endpoint:** `GET /screening/profiles`
 
 ---
 
@@ -188,9 +250,9 @@ Get a specific screening profile by ID.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Screening profile ID |
+| `id` | string | required | Screening profile ID |
 
-**Endpoint:** `GET /api/v1/screening/profiles/{id}`
+**Endpoint:** `GET /screening/profiles/{id}`
 
 ---
 
@@ -200,13 +262,14 @@ Create a new screening profile with criteria and thresholds.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `name` | string | Yes | Profile name |
-| `description` | string | No | Profile description |
-| `criteria` | array of objects | Yes | Screening criteria. Each object: `{ kpi: string, operator: string, value: number }`. Operator is one of: gt, lt, gte, lte, eq |
-| `universe` | string | No | Universe to screen against |
+| `name` | string | required | Profile name |
+| `scope` | string | required | Screening scope (e.g. nordic, global) |
+| `description` | string | optional | Profile description |
+| `criteria` | array of `{field: string, operator: string, value: any}` | required | Screening criteria. Operator is one of: gt, lt, gte, lte, eq |
+| `includeFilters` | Record<string, any> | optional | Include filters |
+| `excludeFilters` | Record<string, any> | optional | Exclude filters |
 
-**Endpoint:** `POST /api/v1/screening/profiles`
-**Body:** All fields
+**Endpoint:** `POST /screening/profiles`
 
 ---
 
@@ -216,14 +279,27 @@ Update an existing screening profile.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Profile ID to update |
-| `name` | string | No | Updated name |
-| `description` | string | No | Updated description |
-| `criteria` | array of objects | No | Updated criteria (same format as create) |
-| `universe` | string | No | Updated universe |
+| `id` | string | required | Profile ID to update |
+| `name` | string | optional | Updated name |
+| `scope` | string | optional | Updated scope |
+| `description` | string | optional | Updated description |
+| `criteria` | array of `{field: string, operator: string, value: any}` | optional | Updated criteria |
+| `includeFilters` | Record<string, any> | optional | Updated include filters |
+| `excludeFilters` | Record<string, any> | optional | Updated exclude filters |
 
-**Endpoint:** `PATCH /api/v1/screening/profiles/{id}`
-**Body:** All fields except `id`
+**Endpoint:** `PATCH /screening/profiles/{id}`
+
+---
+
+### `delete_screening_profile`
+
+Delete a screening profile.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Screening profile ID to delete |
+
+**Endpoint:** `DELETE /screening/profiles/{id}`
 
 ---
 
@@ -233,9 +309,9 @@ Execute a screening profile to find matching instruments.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `profileId` | string | Yes | Screening profile ID to run |
+| `profileId` | string | required | Screening profile ID to run |
 
-**Endpoint:** `POST /api/v1/screening/profiles/{profileId}/run`
+**Endpoint:** `POST /screening/profiles/{profileId}/run`
 
 ---
 
@@ -245,9 +321,22 @@ Get results from a completed screening run.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `runId` | string | Yes | Screening run ID |
+| `runId` | string | required | Screening run ID |
 
-**Endpoint:** `GET /api/v1/screening/runs/{runId}/results`
+**Endpoint:** `GET /screening/runs/{runId}/results`
+
+---
+
+### `create_instruments_from_screening`
+
+Create instruments from screening run results.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Screening run ID |
+| `resultIds` | number[] | required | IDs of screening results to create instruments from |
+
+**Endpoint:** `POST /screening/runs/{id}/create-instruments`
 
 ---
 
@@ -257,21 +346,22 @@ Get available KPIs for screening criteria.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `category` | string | No | Filter by KPI category |
-| `q` | string | No | Search query for KPI names |
+| `category` | string | optional | Filter by KPI category |
+| `q` | string | optional | Search query for KPI names |
 
-**Endpoint:** `GET /api/v1/screening/kpis`
-**Query params:** `category, q`
+**Endpoint:** `GET /screening/kpis`
 
 ---
 
 ### `get_screening_classifications`
 
-Get available screening classifications.
+Get available screening classifications (countries, markets, sectors, branches).
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/screening/classifications`
+**Endpoint:** `GET /screening/classifications`
 
 ---
 
@@ -281,11 +371,24 @@ Get the instrument universe with optional filters.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `flagged` | boolean | No | Filter to flagged instruments only |
-| `dismissed` | boolean | No | Filter to dismissed instruments only |
+| `flagged_only` | boolean | optional | Filter to flagged instruments only |
+| `limit` | number | optional | Max results (default 50) |
+| `offset` | number | optional | Pagination offset |
 
-**Endpoint:** `GET /api/v1/universe`
-**Query params:** `flagged, dismissed`
+**Endpoint:** `GET /universe`
+
+---
+
+### `update_universe_entry`
+
+Flag or dismiss an instrument in the universe.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Universe entry ID |
+| `action` | enum: `flag`, `dismiss` | required | Action to take on the entry |
+
+**Endpoint:** `PATCH /universe/{id}`
 
 ---
 
@@ -297,17 +400,13 @@ List research reports with optional filters.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `type` | string | No | Report type filter |
-| `status` | string | No | Report status filter |
-| `instrument_id` | string | No | Filter by instrument ID |
-| `author` | string | No | Filter by author |
-| `recommendation` | string | No | Filter by recommendation (buy, sell, hold) |
-| `conviction` | string | No | Filter by conviction level |
-| `limit` | number | No | Max results |
-| `offset` | number | No | Pagination offset |
+| `type` | string | optional | Report type filter |
+| `status` | string | optional | Report status filter |
+| `recommendation` | string | optional | Filter by recommendation (Buy, Sell, Hold) |
+| `limit` | number | optional | Max results |
+| `offset` | number | optional | Pagination offset |
 
-**Endpoint:** `GET /api/v1/research`
-**Query params:** `type, status, instrument_id, author, recommendation, conviction, limit, offset`
+**Endpoint:** `GET /research`
 
 ---
 
@@ -317,9 +416,9 @@ Get a specific research report by ID.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Research report ID |
+| `id` | string | required | Research report ID |
 
-**Endpoint:** `GET /api/v1/research/{id}`
+**Endpoint:** `GET /research/{id}`
 
 ---
 
@@ -329,17 +428,15 @@ Create a new research report.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `title` | string | Yes | Report title |
-| `type` | string | Yes | Report type (e.g. initiation, update, note) |
-| `instrument_id` | string | No | Associated instrument ID |
-| `author` | string | Yes | Report author |
-| `body` | string | Yes | Report content in markdown |
-| `recommendation` | string | No | Investment recommendation (buy, sell, hold) |
-| `conviction` | string | No | Conviction level (high, medium, low) |
-| `target_price` | number | No | Target price |
+| `title` | string | required | Report title |
+| `type` | string | required | Report type (e.g. Instrument Research, Thematic, Ad-Hoc) |
+| `instrumentId` | number | required | Associated instrument ID |
+| `author` | string | required | Report author |
+| `body` | string | required | Report content in markdown |
+| `recommendation` | string | optional | Investment recommendation (Buy, Sell, Hold) |
+| `status` | string | optional | Report status (default: draft) |
 
-**Endpoint:** `POST /api/v1/research`
-**Body:** All fields
+**Endpoint:** `POST /research`
 
 ---
 
@@ -349,30 +446,13 @@ Update an existing research report.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Report ID to update |
-| `title` | string | No | Updated title |
-| `body` | string | No | Updated body content |
-| `status` | string | No | Updated status |
-| `recommendation` | string | No | Updated recommendation |
-| `conviction` | string | No | Updated conviction |
-| `target_price` | number | No | Updated target price |
+| `id` | string | required | Report ID to update |
+| `title` | string | optional | Updated title |
+| `body` | string | optional | Updated body content |
+| `status` | string | optional | Updated status |
+| `recommendation` | string | optional | Updated recommendation |
 
-**Endpoint:** `PATCH /api/v1/research/{id}`
-**Body:** All fields except `id`
-
----
-
-### `link_valuation_to_research`
-
-Link a valuation output to a research report.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `report_id` | string | Yes | Research report ID |
-| `valuation_output_id` | string | Yes | Valuation output ID to link |
-
-**Endpoint:** `POST /api/v1/research/{report_id}/link-valuation`
-**Body:** `{ valuation_output_id }`
+**Endpoint:** `PATCH /research/{id}`
 
 ---
 
@@ -382,11 +462,10 @@ Semantic search across research reports.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `query` | string | Yes | Natural language search query |
-| `limit` | number | No | Max results to return |
+| `query` | string | required | Natural language search query |
+| `limit` | number | optional | Max results to return (1-50, default 10) |
 
-**Endpoint:** `POST /api/v1/research/search`
-**Body:** `{ query, limit }`
+**Endpoint:** `POST /research/search`
 
 ---
 
@@ -396,9 +475,11 @@ Semantic search across research reports.
 
 List all available valuation models.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/valuation/models`
+**Endpoint:** `GET /valuation/models`
 
 ---
 
@@ -408,9 +489,9 @@ Get a specific valuation model by ID.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Valuation model ID |
+| `id` | string | required | Valuation model ID |
 
-**Endpoint:** `GET /api/v1/valuation/models/{id}`
+**Endpoint:** `GET /valuation/models/{id}`
 
 ---
 
@@ -420,13 +501,13 @@ Create a new valuation model template.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `name` | string | Yes | Model name |
-| `type` | string | Yes | Model type (e.g. dcf, comps, nav) |
-| `description` | string | No | Model description |
-| `schema` | object | No | Input schema for the model (key-value pairs) |
+| `name` | string | required | Model name |
+| `type` | enum: `dcf`, `comparables`, `ddm`, `nav`, `custom` | required | Model type |
+| `template` | Record<string, any> | required | Model template definition |
+| `description` | string | optional | Model description |
+| `author` | string | optional | Model author |
 
-**Endpoint:** `POST /api/v1/valuation/models`
-**Body:** All fields
+**Endpoint:** `POST /valuation/models`
 
 ---
 
@@ -436,13 +517,12 @@ Update an existing valuation model.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Model ID to update |
-| `name` | string | No | Updated name |
-| `description` | string | No | Updated description |
-| `schema` | object | No | Updated input schema |
+| `id` | string | required | Model ID to update |
+| `name` | string | optional | Updated name |
+| `description` | string | optional | Updated description |
+| `template` | Record<string, any> | optional | Updated template definition |
 
-**Endpoint:** `PATCH /api/v1/valuation/models/{id}`
-**Body:** All fields except `id`
+**Endpoint:** `PATCH /valuation/models/{id}`
 
 ---
 
@@ -452,13 +532,12 @@ Execute a valuation model against an instrument with input data.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `modelId` | string | Yes | Valuation model ID to execute |
-| `instrumentId` | string | Yes | Target instrument ID |
-| `inputData` | object | Yes | Input data for the valuation model (key-value pairs) |
-| `author` | string | Yes | Person running the valuation |
+| `modelId` | string | required | Valuation model ID to execute |
+| `instrumentId` | string | required | Target instrument ID |
+| `inputData` | Record<string, any> | required | Input data for the valuation model |
+| `author` | string | required | Person running the valuation |
 
-**Endpoint:** `POST /api/v1/valuation/execute`
-**Body:** `{ modelId, instrumentId, inputData, author }`
+**Endpoint:** `POST /valuation/execute`
 
 ---
 
@@ -468,9 +547,9 @@ Get a specific valuation output by ID.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Valuation output ID |
+| `id` | string | required | Valuation output ID |
 
-**Endpoint:** `GET /api/v1/valuation/outputs/{id}`
+**Endpoint:** `GET /valuation/outputs/{id}`
 
 ---
 
@@ -480,24 +559,9 @@ List all valuation outputs for a specific instrument.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `instrument_id` | string | Yes | Instrument ID to get valuations for |
+| `instrument_id` | string | required | Instrument ID to get valuations for |
 
-**Endpoint:** `GET /api/v1/valuation/outputs`
-**Query params:** `instrument_id`
-
----
-
-### `link_valuation_to_report`
-
-Link a valuation output to a research report.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `report_id` | string | Yes | Research report ID |
-| `valuation_output_id` | string | Yes | Valuation output ID to link |
-
-**Endpoint:** `POST /api/v1/research/{report_id}/link-valuation`
-**Body:** `{ valuation_output_id }`
+**Endpoint:** `GET /valuation/outputs`
 
 ---
 
@@ -509,39 +573,35 @@ Create a new investment committee meeting.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `meeting_date` | string | Yes | Meeting date in ISO format (YYYY-MM-DD or full ISO) |
+| `meetingDate` | string | required | Meeting date (YYYY-MM-DD) |
 
-**Endpoint:** `POST /api/v1/ic/meetings`
-**Body:** `{ meetingDate }` (note: `meeting_date` is mapped to `meetingDate` in the request body)
+**Endpoint:** `POST /ic/meetings`
 
 ---
 
-### `update_meeting_status`
+### `update_ic_meeting`
 
-Update the status of an IC meeting (e.g. scheduled, in_progress, completed).
+Update an IC meeting (status and/or date).
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Meeting ID |
-| `status` | string | Yes | New status (scheduled, in_progress, completed, cancelled) |
+| `id` | string | required | Meeting ID |
+| `status` | string | optional | New status |
+| `meetingDate` | string | optional | Updated meeting date (YYYY-MM-DD) |
 
-**Endpoint:** `PATCH /api/v1/ic/meetings/{id}`
-**Body:** `{ status }`
+**Endpoint:** `PATCH /ic/meetings/{id}`
 
 ---
 
 ### `list_ic_meetings`
 
-List investment committee meetings with optional filters.
+List investment committee meetings.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `status` | string | No | Filter by meeting status |
-| `limit` | number | No | Max results |
-| `offset` | number | No | Pagination offset |
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/ic/meetings`
-**Query params:** `status, limit, offset`
+**Endpoint:** `GET /ic/meetings`
 
 ---
 
@@ -551,9 +611,9 @@ Get detailed information about a specific IC meeting.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Meeting ID |
+| `id` | string | required | Meeting ID |
 
-**Endpoint:** `GET /api/v1/ic/meetings/{id}`
+**Endpoint:** `GET /ic/meetings/{id}`
 
 ---
 
@@ -563,78 +623,13 @@ Add an agenda item to an IC meeting.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `meeting_id` | string | Yes | Meeting ID |
-| `title` | string | Yes | Agenda item title |
-| `type` | string | No | Item type (e.g. new_position, review, risk) |
-| `instrument_id` | string | No | Associated instrument ID |
-| `research_id` | string | No | Associated research report ID |
-| `presenter` | string | No | Who will present this item |
-| `notes` | string | No | Additional notes |
+| `meeting_id` | string | required | Meeting ID |
+| `title` | string | required | Agenda item title |
+| `instrumentId` | number | optional | Associated instrument ID |
+| `presenter` | string | optional | Who will present this item |
+| `order` | number | optional | Display order |
 
-**Endpoint:** `POST /api/v1/ic/meetings/{meeting_id}/agenda`
-**Body:** All fields except `meeting_id`
-
----
-
-### `update_agenda_item`
-
-Update an agenda item on an IC meeting.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `meeting_id` | string | Yes | Meeting ID |
-| `id` | string | Yes | Agenda item ID |
-| `title` | string | No | Updated title |
-| `type` | string | No | Updated type |
-| `presenter` | string | No | Updated presenter |
-| `notes` | string | No | Updated notes |
-| `decision` | string | No | Decision recorded for this item |
-
-**Endpoint:** `PATCH /api/v1/ic/meetings/{meeting_id}/agenda`
-**Body:** All fields except `meeting_id` (including `id` in body)
-
----
-
-### `remove_agenda_item`
-
-Remove an agenda item from an IC meeting.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `meeting_id` | string | Yes | Meeting ID |
-| `id` | string | Yes | Agenda item ID to remove |
-
-**Endpoint:** `DELETE /api/v1/ic/meetings/{meeting_id}/agenda/{id}`
-
----
-
-### `reorder_agenda_items`
-
-Reorder agenda items on an IC meeting.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `meeting_id` | string | Yes | Meeting ID |
-| `ordered_ids` | array of strings | Yes | Agenda item IDs in desired order |
-
-**Endpoint:** `PUT /api/v1/ic/meetings/{meeting_id}/agenda/reorder`
-**Body:** `{ ordered_ids }`
-
----
-
-### `post_preread`
-
-Upload a pre-read document for an agenda item.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `agenda_item_id` | string | Yes | Agenda item ID |
-| `title` | string | Yes | Pre-read title |
-| `content` | string | Yes | Pre-read content in markdown |
-| `author` | string | Yes | Author of the pre-read |
-
-**Endpoint:** `POST /api/v1/ic/agenda/{agenda_item_id}/prereads`
-**Body:** `{ title, content, author }`
+**Endpoint:** `POST /ic/meetings/{meeting_id}/agenda`
 
 ---
 
@@ -644,12 +639,10 @@ Post minutes for an IC meeting.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `meeting_id` | string | Yes | Meeting ID |
-| `body` | string | Yes | Minutes content in markdown |
-| `author` | string | Yes | Author of the minutes |
+| `meeting_id` | string | required | Meeting ID |
+| `minutes` | string | required | Minutes content in markdown |
 
-**Endpoint:** `POST /api/v1/ic/meetings/{meeting_id}/minutes`
-**Body:** `{ body, author }`
+**Endpoint:** `POST /ic/meetings/{meeting_id}/minutes`
 
 ---
 
@@ -659,12 +652,10 @@ Update existing minutes for an IC meeting.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `meeting_id` | string | Yes | Meeting ID |
-| `id` | string | Yes | Minutes record ID |
-| `body` | string | Yes | Updated minutes content |
+| `meeting_id` | string | required | Meeting ID |
+| `minutes` | string | required | Updated minutes content |
 
-**Endpoint:** `PATCH /api/v1/ic/meetings/{meeting_id}/minutes`
-**Body:** `{ id, body }`
+**Endpoint:** `PATCH /ic/meetings/{meeting_id}/minutes`
 
 ---
 
@@ -674,13 +665,13 @@ Record a decision from an IC meeting.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `meeting_id` | string | Yes | Meeting ID where decision was made |
-| `text` | string | Yes | Decision text |
-| `assignee` | string | No | Person assigned to execute the decision |
-| `due_date` | string | No | Due date for the decision action (ISO format) |
+| `meetingId` | number | required | Meeting ID where decision was made |
+| `decision` | enum: `approve`, `reject`, `defer`, `modify` | required | Decision outcome |
+| `instrumentId` | number | optional | Related instrument ID |
+| `rationale` | string | optional | Rationale for the decision |
+| `author` | string | optional | Person recording the decision |
 
-**Endpoint:** `POST /api/v1/ic/decisions`
-**Body:** `{ meeting_id, text, assignee, due_date }`
+**Endpoint:** `POST /ic/decisions`
 
 ---
 
@@ -690,29 +681,22 @@ Update the status of an IC decision.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | Decision ID |
-| `status` | string | Yes | New status (pending, in_progress, completed, cancelled) |
-| `note` | string | No | Optional note about the status change |
+| `id` | string | required | Decision ID |
+| `status` | enum: `pending`, `executed`, `cancelled` | required | New status |
 
-**Endpoint:** `PATCH /api/v1/ic/decisions/{id}`
-**Body:** `{ status, note }`
+**Endpoint:** `PATCH /ic/decisions/{id}`
 
 ---
 
 ### `list_decisions`
 
-List IC decisions with optional filters.
+List IC decisions.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `status` | string | No | Filter by decision status |
-| `meeting_id` | string | No | Filter by meeting ID |
-| `assignee` | string | No | Filter by assignee |
-| `limit` | number | No | Max results |
-| `offset` | number | No | Pagination offset |
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/ic/decisions`
-**Query params:** `status, meeting_id, assignee, limit, offset`
+**Endpoint:** `GET /ic/decisions`
 
 ---
 
@@ -724,18 +708,15 @@ Register a new trade in the portfolio.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `instrument_id` | string | Yes | Instrument ID |
-| `side` | enum: `"buy"`, `"sell"` | Yes | Trade side |
-| `quantity` | number | Yes | Number of units |
-| `price` | number | Yes | Execution price per unit |
-| `currency` | string | No | Trade currency |
-| `trade_date` | string | No | Trade date (ISO format, defaults to today) |
-| `settlement_date` | string | No | Settlement date (ISO format) |
-| `broker` | string | No | Broker name |
-| `notes` | string | No | Trade notes |
+| `instrumentId` | number | required | Instrument ID |
+| `tradeType` | enum: `buy`, `sell` | required | Trade type |
+| `shares` | number | required | Number of shares |
+| `pricePerShare` | number | required | Price per share |
+| `tradeDate` | string | required | Trade date (YYYY-MM-DD) |
+| `currency` | string | required | Trade currency (e.g. SEK, USD) |
+| `fxRate` | number | optional | FX rate to base currency |
 
-**Endpoint:** `POST /api/v1/portfolio/trades`
-**Body:** All fields
+**Endpoint:** `POST /portfolio/trades`
 
 ---
 
@@ -743,9 +724,11 @@ Register a new trade in the portfolio.
 
 Get all current portfolio positions.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/portfolio/positions`
+**Endpoint:** `GET /portfolio/positions`
 
 ---
 
@@ -755,9 +738,9 @@ Get position details for a specific instrument.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `instrument_id` | string | Yes | Instrument ID |
+| `instrumentId` | string | required | Instrument ID |
 
-**Endpoint:** `GET /api/v1/portfolio/positions/{instrument_id}`
+**Endpoint:** `GET /portfolio/positions/{instrumentId}`
 
 ---
 
@@ -767,10 +750,9 @@ Get trade history, optionally filtered by instrument.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `instrument_id` | string | No | Filter by instrument ID |
+| `instrumentId` | string | optional | Filter by instrument ID |
 
-**Endpoint:** `GET /api/v1/portfolio/trades`
-**Query params:** `instrument_id`
+**Endpoint:** `GET /portfolio/trades`
 
 ---
 
@@ -778,9 +760,11 @@ Get trade history, optionally filtered by instrument.
 
 Get a high-level portfolio summary including NAV, returns, and key metrics.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/portfolio/summary`
+**Endpoint:** `GET /portfolio/summary`
 
 ---
 
@@ -790,10 +774,9 @@ Get portfolio allocation breakdown.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `group_by` | string | No | Group by field (e.g. asset_class, sector, country) |
+| `group_by` | string | optional | Group by field (e.g. assetClass, sector, country) |
 
-**Endpoint:** `GET /api/v1/portfolio/allocation`
-**Query params:** `group_by`
+**Endpoint:** `GET /portfolio/allocation`
 
 ---
 
@@ -801,33 +784,140 @@ Get portfolio allocation breakdown.
 
 Get portfolio foreign exchange exposure breakdown.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/portfolio/fx-exposure`
-
----
-
-### `recalculate_positions`
-
-Trigger recalculation of all portfolio positions from trade history.
-
-**Parameters:** None
-
-**Endpoint:** `POST /api/v1/daily-update`
-
-Note: This triggers the full daily update process, which includes position recalculation.
+**Endpoint:** `GET /portfolio/fx-exposure`
 
 ---
 
-### `snapshot_portfolio`
+## Performance
 
-Trigger a portfolio snapshot as part of the daily update process.
+### `get_performance_summary`
 
-**Parameters:** None
+Get portfolio performance summary for a given period.
 
-**Endpoint:** `POST /api/v1/daily-update`
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `period` | enum: `wtd`, `mtd`, `qtd`, `ytd`, `custom` | required | Time period |
+| `date_from` | string | optional | Start date for custom period (YYYY-MM-DD) |
+| `date_to` | string | optional | End date for custom period (YYYY-MM-DD) |
+| `as_of_date` | string | optional | As-of date (YYYY-MM-DD) |
 
-Note: This triggers the same daily update endpoint as `recalculate_positions`.
+**Endpoint:** `GET /performance/summary`
+
+---
+
+### `get_return_series`
+
+Get portfolio and benchmark return time series.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `date_from` | string | required | Start date (YYYY-MM-DD) |
+| `date_to` | string | required | End date (YYYY-MM-DD) |
+| `interval` | enum: `daily`, `weekly`, `monthly` | required | Return interval |
+
+**Endpoint:** `GET /performance/returns`
+
+---
+
+### `get_performance_attribution`
+
+Get performance attribution analysis by position, sector, or currency.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `date_from` | string | required | Start date (YYYY-MM-DD) |
+| `date_to` | string | required | End date (YYYY-MM-DD) |
+| `group_by` | enum: `position`, `sector`, `currency` | required | Attribution grouping |
+
+**Endpoint:** `GET /performance/attribution`
+
+---
+
+### `get_drawdown_analysis`
+
+Get portfolio drawdown analysis including current and maximum drawdowns.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `date_from` | string | optional | Start date (YYYY-MM-DD) |
+| `date_to` | string | optional | End date (YYYY-MM-DD) |
+
+**Endpoint:** `GET /performance/drawdown`
+
+---
+
+### `get_benchmark_config`
+
+Get the current benchmark configuration.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /performance/benchmark`
+
+---
+
+### `set_benchmark`
+
+Set a benchmark instrument for performance comparison.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | string | required | Benchmark name |
+| `instrumentId` | number | required | Instrument ID to use as benchmark |
+
+**Endpoint:** `POST /performance/benchmark`
+
+---
+
+### `list_performance_reports`
+
+List performance reports with optional filters.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `period` | enum: `weekly`, `monthly`, `quarterly`, `annual`, `ad_hoc` | optional | Filter by report period |
+| `date_from` | string | optional | Start date filter (YYYY-MM-DD) |
+| `date_to` | string | optional | End date filter (YYYY-MM-DD) |
+| `limit` | number | optional | Max results (default 50) |
+| `offset` | number | optional | Pagination offset |
+
+**Endpoint:** `GET /performance/reports`
+
+---
+
+### `create_performance_report`
+
+Create a new performance report.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `reportDate` | string | required | Report date (YYYY-MM-DD) |
+| `period` | enum: `weekly`, `monthly`, `quarterly`, `annual`, `ad_hoc` | required | Report period |
+| `periodStart` | string | required | Period start date (YYYY-MM-DD) |
+| `periodEnd` | string | required | Period end date (YYYY-MM-DD) |
+| `author` | string | required | Report author |
+| `body` | string | required | Report content in markdown |
+| `metricsSnapshot` | Record<string, any> | optional | Snapshot of key metrics |
+
+**Endpoint:** `POST /performance/reports`
+
+---
+
+### `get_performance_report`
+
+Get a specific performance report by ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Performance report ID |
+
+**Endpoint:** `GET /performance/reports/{id}`
 
 ---
 
@@ -839,14 +929,25 @@ Publish a new risk report.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `type` | string | Yes | Report type (e.g. daily, weekly, adhoc) |
-| `title` | string | Yes | Report title |
-| `body` | string | Yes | Report content in markdown |
-| `metrics` | object | No | Key risk metrics as key-value pairs |
-| `author` | string | Yes | Report author |
+| `type` | string | required | Report type (e.g. daily, weekly, adhoc) |
+| `title` | string | required | Report title |
+| `body` | string | required | Report content in markdown |
+| `metrics` | Record<string, any> | optional | Key risk metrics as key-value pairs |
+| `author` | string | required | Report author |
 
-**Endpoint:** `POST /api/v1/risk/reports`
-**Body:** All fields
+**Endpoint:** `POST /risk/reports`
+
+---
+
+### `get_risk_report`
+
+Get a specific risk report by ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Risk report ID |
+
+**Endpoint:** `GET /risk/reports/{id}`
 
 ---
 
@@ -854,9 +955,11 @@ Publish a new risk report.
 
 Get the current risk dashboard with key metrics and alerts.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/risk/dashboard`
+**Endpoint:** `GET /risk/dashboard`
 
 ---
 
@@ -866,74 +969,92 @@ List risk reports with optional filters.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `type` | string | No | Filter by report type |
-| `date_from` | string | No | Start date filter (ISO format) |
-| `date_to` | string | No | End date filter (ISO format) |
-| `limit` | number | No | Max results |
-| `offset` | number | No | Pagination offset |
+| `type` | string | optional | Filter by report type |
+| `date_from` | string | optional | Start date filter (YYYY-MM-DD) |
+| `date_to` | string | optional | End date filter (YYYY-MM-DD) |
 
-**Endpoint:** `GET /api/v1/risk/reports`
-**Query params:** `type, date_from, date_to, limit, offset`
+**Endpoint:** `GET /risk/reports`
 
 ---
 
 ### `get_alert_config`
 
-Get the current risk alert configuration.
-
-**Parameters:** None
-
-**Endpoint:** `GET /api/v1/risk/alerts/config`
-
----
-
-### `suggest_alert_change`
-
-Suggest a change to risk alert thresholds.
+Get the current risk alert trigger configuration.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `metric` | string | Yes | The risk metric to alert on |
-| `condition` | string | Yes | Alert condition (e.g. gt, lt, crosses) |
-| `threshold` | number | Yes | Threshold value |
-| `severity` | string | Yes | Alert severity (info, warning, critical) |
+| *(none)* | | | |
 
-**Endpoint:** `POST /api/v1/risk/alerts/config`
-**Body:** `{ metric, condition, threshold, severity }`
+**Endpoint:** `GET /risk/alerts/config`
 
 ---
 
-### `record_alert_event`
+### `create_risk_alert_trigger`
 
-Record a risk alert event when a threshold is breached.
+Create a new risk alert trigger.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `trigger_id` | string | Yes | Alert trigger ID |
-| `metric_value` | number | Yes | The metric value that triggered the alert |
+| `metric` | string | required | The risk metric to alert on |
+| `operator` | enum: `gt`, `gte`, `lt`, `lte`, `eq` | required | Comparison operator |
+| `threshold` | number | required | Threshold value |
+| `enabled` | boolean | optional | Whether the trigger is enabled (default: true) |
 
-**Endpoint:** `POST /api/v1/risk/alerts/events`
-**Body:** `{ trigger_id, metric_value }`
-
----
-
-### `get_risk_decomposition`
-
-Get portfolio risk decomposition (factor exposures, contribution to risk).
-
-**Parameters:** None
-
-**Endpoint:** `GET /api/v1/risk/decomposition`
+**Endpoint:** `POST /risk/alerts/config`
 
 ---
 
-### `get_holdings_for_optimizer`
+### `update_risk_alert_trigger`
 
-Get current holdings in a format suitable for portfolio optimization.
+Update an existing risk alert trigger.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Alert trigger ID |
+| `metric` | string | optional | Updated metric |
+| `operator` | enum: `gt`, `gte`, `lt`, `lte`, `eq` | optional | Updated operator |
+| `threshold` | number | optional | Updated threshold |
+| `enabled` | boolean | optional | Enable or disable the trigger |
 
-**Endpoint:** `GET /api/v1/risk/holdings-for-optimizer`
+**Endpoint:** `PATCH /risk/alerts/config/{id}`
+
+---
+
+### `delete_risk_alert_trigger`
+
+Delete a risk alert trigger.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Alert trigger ID to delete |
+
+**Endpoint:** `DELETE /risk/alerts/config/{id}`
+
+---
+
+### `list_risk_alert_events`
+
+List risk alert events that have been triggered.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /risk/alerts/events`
+
+---
+
+### `acknowledge_risk_alert_event`
+
+Acknowledge a risk alert event.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Alert event ID |
+| `acknowledged` | boolean | required | Set to true to acknowledge |
+| `acknowledgedBy` | string | optional | Person acknowledging the alert |
+
+**Endpoint:** `PATCH /risk/alerts/events/{id}`
 
 ---
 
@@ -945,12 +1066,11 @@ Get notifications with optional filters.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `unread_only` | boolean | No | Only return unread notifications |
-| `limit` | number | No | Max results |
-| `offset` | number | No | Pagination offset |
+| `unread_only` | boolean | optional | Only return unread notifications |
+| `limit` | number | optional | Max results |
+| `offset` | number | optional | Pagination offset |
 
-**Endpoint:** `GET /api/v1/notifications`
-**Query params:** `unread_only, limit, offset`
+**Endpoint:** `GET /notifications`
 
 ---
 
@@ -958,9 +1078,35 @@ Get notifications with optional filters.
 
 Get the count of unread notifications.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `GET /api/v1/notifications/unread-count`
+**Endpoint:** `GET /notifications/unread-count`
+
+---
+
+### `mark_notification_read`
+
+Mark a specific notification as read.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Notification ID |
+
+**Endpoint:** `PATCH /notifications/{id}/read`
+
+---
+
+### `mark_all_notifications_read`
+
+Mark all notifications as read.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `POST /notifications/mark-all-read`
 
 ---
 
@@ -972,11 +1118,10 @@ Search across all PRRM entities (instruments, research, meetings, etc.).
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `q` | string | Yes | Search query |
-| `type` | string | No | Restrict to entity type (instrument, research, meeting, decision) |
+| `q` | string | required | Search query |
+| `type` | string | optional | Restrict to entity type (instrument, research, meeting, decision) |
 
-**Endpoint:** `GET /api/v1/search`
-**Query params:** `q, type`
+**Endpoint:** `GET /search`
 
 ---
 
@@ -984,9 +1129,11 @@ Search across all PRRM entities (instruments, research, meetings, etc.).
 
 Get the full catalog of available PRRM MCP tools organized by module.
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** None (returns a hardcoded catalog; no API call is made)
+**Endpoint:** *(local -- returns the built-in tool catalog, no REST call)*
 
 ---
 
@@ -994,42 +1141,138 @@ Get the full catalog of available PRRM MCP tools organized by module.
 
 Trigger the PRRM daily update process (recalculates positions, snapshots portfolio).
 
-**Parameters:** None
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
 
-**Endpoint:** `POST /api/v1/daily-update`
+**Endpoint:** `POST /daily-update`
+
+---
+
+### `health_check`
+
+Check PRRM server health status.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /health`
+
+---
+
+### `get_settings`
+
+Get PRRM application settings.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /settings`
+
+---
+
+### `update_setting`
+
+Update a PRRM application setting.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `key` | string | required | Setting key |
+| `value` | any | required | Setting value |
+
+**Endpoint:** `PATCH /settings`
+
+---
+
+### `get_webhook_config`
+
+Get outbound webhook configuration.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /webhooks/config`
+
+---
+
+### `update_webhook_config`
+
+Update outbound webhook configuration.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `url` | string | required | Webhook URL |
+| `enabled` | boolean | required | Whether the webhook is enabled |
+| `events` | string[] | required | Event types to send |
+
+**Endpoint:** `PUT /webhooks/config`
+
+---
+
+### `test_webhook`
+
+Send a test webhook to the configured URL.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `POST /webhooks/test`
 
 ---
 
 ## Error Handling
 
-The API client translates HTTP errors into text content returned to the agent. Exceptions are never thrown from tool handlers.
+All tools follow the same error handling pattern. Errors are **never thrown** to the MCP transport. Instead, they are caught by the API client and returned as JSON text content so the LLM agent can read and react to them.
 
-| HTTP Status | Behavior |
-|-------------|----------|
-| 200, 201 | Returns the `data` field from the standard `{ data: ... }` response envelope |
-| 400, 422 | Returns the validation error message as text (allows the agent to see what went wrong and retry) |
-| 401 | Returns `"Authentication failed -- check PRRM_API_TOKEN"` |
-| 404 | Returns `"Not found"` or the error message from the response |
-| 500, 503 | Returns the error message from the server |
+### Error response shape
 
-When `PRRM_MCP_DEBUG=true` is set, all HTTP requests and their response status codes are logged to stderr with timestamps, which is useful for diagnosing connectivity or authentication issues.
+```json
+{
+  "error": true,
+  "status": 404,
+  "message": "Instrument not found",
+  "details": {}
+}
+```
+
+### Common error codes
+
+| HTTP Status | Meaning | Typical Cause |
+|-------------|---------|---------------|
+| `400` | Bad Request | Invalid parameters, missing required fields |
+| `401` | Unauthorized | Missing or invalid API key |
+| `403` | Forbidden | Insufficient permissions for the operation |
+| `404` | Not Found | Entity ID does not exist |
+| `409` | Conflict | Duplicate entry or version conflict |
+| `422` | Unprocessable Entity | Validation failed on the server side |
+| `500` | Internal Server Error | Unexpected server failure |
+
+### Agent guidance
+
+When an error is returned, the agent should:
+
+1. Read the `message` and `details` fields to understand what went wrong.
+2. For `404` errors, verify the entity ID is correct (e.g. use `search_instruments` to find the right ID).
+3. For `400`/`422` errors, check the parameter values against the schema above.
+4. For `401`/`403` errors, inform the user that authentication or permissions need attention.
+5. For `500` errors, retry once; if the error persists, report the issue to the user.
 
 ---
 
 ## MCP Resources
 
-The server exposes one MCP resource in addition to the tools.
-
 ### `prrm://guide`
 
-An embedded integration guide that describes the PRRM platform and common workflows. The guide is available at the URI `prrm://guide` and returns Markdown content.
+The server exposes a single MCP resource at URI `prrm://guide`. This resource returns a markdown document describing the PRRM platform, its investment workflow, and guidance for agents on how to use the tools effectively.
 
-The guide covers:
+**Usage:** Agents should read this resource at the start of a session to understand the PRRM domain model and recommended tool usage patterns. It covers:
 
-- **Overview** of the PRRM platform and its capabilities
-- **Getting started** steps for new agents
-- **Common workflows:**
-  - Researching an instrument (search, details, reports, valuations, comments)
-  - Preparing for an IC meeting (list meetings, view agenda, add items, attach prereads, record decisions)
-  - Monitoring risk (dashboard, decomposition, portfolio summary, allocation, FX exposure)
-  - Running a screen (available KPIs, create profile, execute, review results)
+- Platform overview and purpose
+- The investment workflow (screening, research, valuation, IC, portfolio, performance, risk)
+- Domain-specific terminology
+- Recommended tool call sequences for common tasks
+- Best practices for interacting with the PRRM system

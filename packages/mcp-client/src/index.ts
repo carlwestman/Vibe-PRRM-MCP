@@ -13,6 +13,7 @@ import { registerIcTools } from "./tools/ic.js";
 import { registerPortfolioTools } from "./tools/portfolio.js";
 import { registerRiskTools } from "./tools/risk.js";
 import { registerNotificationTools } from "./tools/notifications.js";
+import { registerPerformanceTools } from "./tools/performance.js";
 import { registerPlatformTools } from "./tools/platform.js";
 
 const GUIDE_CONTENT = `# PRRM Integration Guide
@@ -40,15 +41,16 @@ investment committee management, portfolio tracking, and risk monitoring.
 1. \`list_ic_meetings\` — find upcoming meetings
 2. \`get_ic_meeting\` — see agenda and details
 3. \`add_agenda_item\` — add items to discuss
-4. \`post_preread\` — attach pre-read materials
-5. \`record_decision\` — capture decisions after the meeting
+4. \`record_decision\` — capture decisions after the meeting
 
-### Monitor Risk
+### Monitor Risk & Performance
 1. \`get_risk_dashboard\` — current risk overview
-2. \`get_risk_decomposition\` — factor exposures
-3. \`get_portfolio_summary\` — NAV and returns
-4. \`get_allocation\` — allocation breakdown
-5. \`get_fx_exposure\` — currency exposure
+2. \`get_performance_summary\` — returns and ratios
+3. \`get_performance_attribution\` — what drove returns
+4. \`get_drawdown_analysis\` — drawdown history
+5. \`get_portfolio_summary\` — NAV and returns
+6. \`get_allocation\` — allocation breakdown
+7. \`get_fx_exposure\` — currency exposure
 
 ### Run a Screen
 1. \`get_available_kpis\` — see available metrics
@@ -96,6 +98,7 @@ function main() {
   registerIcTools(server, api);
   registerPortfolioTools(server, api);
   registerRiskTools(server, api);
+  registerPerformanceTools(server, api);
   registerNotificationTools(server, api);
   registerPlatformTools(server, api);
 

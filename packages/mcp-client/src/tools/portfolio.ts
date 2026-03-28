@@ -7,15 +7,13 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "register_trade",
     "Register a new trade in the portfolio",
     {
-      instrument_id: z.string().describe("Instrument ID"),
-      side: z.enum(["buy", "sell"]).describe("Trade side"),
-      quantity: z.number().describe("Number of units"),
-      price: z.number().describe("Execution price per unit"),
-      currency: z.string().optional().describe("Trade currency"),
-      trade_date: z.string().optional().describe("Trade date (ISO format, defaults to today)"),
-      settlement_date: z.string().optional().describe("Settlement date (ISO format)"),
-      broker: z.string().optional().describe("Broker name"),
-      notes: z.string().optional().describe("Trade notes"),
+      instrumentId: z.number().describe("Instrument ID"),
+      tradeType: z.enum(["buy", "sell"]).describe("Trade type"),
+      shares: z.number().describe("Number of shares"),
+      pricePerShare: z.number().describe("Price per share"),
+      tradeDate: z.string().describe("Trade date (YYYY-MM-DD)"),
+      currency: z.string().describe("Trade currency (e.g. SEK, USD)"),
+      fxRate: z.number().optional().describe("FX rate to base currency"),
     },
     async (params) => {
       const result = await api.post("/portfolio/trades", params);
@@ -37,10 +35,10 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "get_position",
     "Get position details for a specific instrument",
     {
-      instrument_id: z.string().describe("Instrument ID"),
+      instrumentId: z.string().describe("Instrument ID"),
     },
-    async ({ instrument_id }) => {
-      const result = await api.get(`/portfolio/positions/${instrument_id}`);
+    async ({ instrumentId }) => {
+      const result = await api.get(`/portfolio/positions/${instrumentId}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -49,11 +47,11 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "get_trade_history",
     "Get trade history, optionally filtered by instrument",
     {
-      instrument_id: z.string().optional().describe("Filter by instrument ID"),
+      instrumentId: z.string().optional().describe("Filter by instrument ID"),
     },
     async (params) => {
       const result = await api.get("/portfolio/trades", {
-        instrument_id: params.instrument_id,
+        instrumentId: params.instrumentId,
       });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
@@ -73,7 +71,7 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "get_allocation",
     "Get portfolio allocation breakdown",
     {
-      group_by: z.string().optional().describe("Group by field (e.g. asset_class, sector, country)"),
+      group_by: z.string().optional().describe("Group by field (e.g. assetClass, sector, country)"),
     },
     async ({ group_by }) => {
       const result = await api.get("/portfolio/allocation", { group_by });
@@ -87,26 +85,6 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     {},
     async () => {
       const result = await api.get("/portfolio/fx-exposure");
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "recalculate_positions",
-    "Trigger recalculation of all portfolio positions from trade history",
-    {},
-    async () => {
-      const result = await api.post("/daily-update");
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "snapshot_portfolio",
-    "Trigger a portfolio snapshot as part of the daily update process",
-    {},
-    async () => {
-      const result = await api.post("/daily-update");
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
