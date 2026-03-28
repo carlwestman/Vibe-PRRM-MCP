@@ -115,6 +115,11 @@ describe("Screening tools", () => {
     const data = await callTool("get_universe", {});
     expect(data).toBeDefined();
   });
+
+  it("list_intersection_configs returns data", async () => {
+    const data = await callTool("list_intersection_configs", {});
+    expect(data).toBeDefined();
+  });
 });
 
 // ─── Research ─────────────────────────────────────────────
@@ -281,7 +286,7 @@ describe("Platform tools", () => {
     const data = await callTool("get_tool_catalog");
     expect(Array.isArray(data)).toBe(true);
     const totalTools = data.reduce((sum: number, m: any) => sum + m.tools.length, 0);
-    expect(totalTools).toBe(87);
+    expect(totalTools).toBe(96);
   });
 
   it("health_check returns data", async () => {

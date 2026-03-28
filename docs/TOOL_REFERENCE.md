@@ -1,6 +1,6 @@
 # PRRM MCP Tool Reference
 
-Complete reference for all 87 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
+Complete reference for all 96 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
 
 All parameters are validated with Zod schemas before the API call is made. Tool results are returned as JSON text content. Errors are never thrown -- they are returned as text so the agent can read and react to them.
 
@@ -11,7 +11,7 @@ All parameters are validated with Zod schemas before the API call is made. Tool 
 - [Strategy](#strategy) (4 tools)
 - [Instruments](#instruments) (8 tools)
 - [Comments](#comments) (2 tools)
-- [Screening](#screening) (12 tools)
+- [Screening](#screening) (21 tools)
 - [Research](#research) (5 tools)
 - [Valuation](#valuation) (7 tools)
 - [Investment Committee](#investment-committee) (10 tools)
@@ -389,6 +389,127 @@ Flag or dismiss an instrument in the universe.
 | `action` | enum: `flag`, `dismiss` | required | Action to take on the entry |
 
 **Endpoint:** `PATCH /universe/{id}`
+
+---
+
+### `list_intersection_configs`
+
+List screening intersection configurations.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `status` | string | optional | Filter by status |
+
+**Endpoint:** `GET /screening/intersections`
+
+---
+
+### `create_intersection_config`
+
+Create a screening intersection configuration that combines multiple screening profiles.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | string | required | Intersection config name |
+| `description` | string | optional | Description |
+| `pipeline` | array | required | Pipeline steps defining which profiles to intersect |
+| `scoring` | Record<string, any> | optional | Scoring configuration |
+
+**Endpoint:** `POST /screening/intersections`
+
+---
+
+### `get_intersection_config`
+
+Get a specific screening intersection configuration.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Intersection config ID |
+
+**Endpoint:** `GET /screening/intersections/{id}`
+
+---
+
+### `update_intersection_config`
+
+Update a screening intersection configuration.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Intersection config ID |
+| `name` | string | optional | Updated name |
+| `description` | string | optional | Updated description |
+| `pipeline` | array | optional | Updated pipeline steps |
+| `scoring` | Record<string, any> | optional | Updated scoring configuration |
+
+**Endpoint:** `PATCH /screening/intersections/{id}`
+
+---
+
+### `delete_intersection_config`
+
+Archive a screening intersection configuration.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Intersection config ID to archive |
+
+**Endpoint:** `DELETE /screening/intersections/{id}`
+
+---
+
+### `run_intersection`
+
+Run a screening intersection pipeline.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Intersection config ID to run |
+| `forceRefresh` | boolean | optional | Force refresh underlying screens |
+| `dryRun` | boolean | optional | Dry run without persisting results |
+| `syncToUniverse` | boolean | optional | Sync results to the investment universe |
+| `triggeredBy` | string | optional | Who triggered the run |
+| `triggerType` | string | optional | How it was triggered (manual, scheduled, etc.) |
+
+**Endpoint:** `POST /screening/intersections/{id}/run`
+
+---
+
+### `list_intersection_runs`
+
+List runs for a screening intersection configuration.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Intersection config ID |
+
+**Endpoint:** `GET /screening/intersections/{id}/runs`
+
+---
+
+### `get_intersection_run`
+
+Get a specific intersection run with results.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Intersection run ID |
+
+**Endpoint:** `GET /screening/intersection-runs/{id}`
+
+---
+
+### `get_intersection_diff`
+
+Compare two intersection runs to see what changed.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Base intersection run ID |
+| `otherId` | string | required | Other intersection run ID to compare against |
+
+**Endpoint:** `GET /screening/intersection-runs/{id}/diff/{otherId}`
 
 ---
 

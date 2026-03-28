@@ -118,7 +118,7 @@ Add the following to your `openclaw.json`:
 
 ## Tool Catalog
 
-The server exposes 87 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
+The server exposes 96 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
 
 ### Strategy (4 tools)
 
@@ -149,7 +149,7 @@ The server exposes 87 tools across 12 modules. Every tool maps 1:1 to a PRRM RES
 | `get_comments` | Get comments for an instrument or research report |
 | `add_comment` | Add a comment to an instrument or research report |
 
-### Screening (12 tools)
+### Screening (21 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -165,6 +165,15 @@ The server exposes 87 tools across 12 modules. Every tool maps 1:1 to a PRRM RES
 | `get_screening_classifications` | Get available screening classifications |
 | `get_universe` | Get the instrument universe with optional filters |
 | `update_universe_entry` | Flag or dismiss an instrument in the universe |
+| `list_intersection_configs` | List screening intersection configurations |
+| `create_intersection_config` | Create an intersection config combining multiple profiles |
+| `get_intersection_config` | Get a specific intersection configuration |
+| `update_intersection_config` | Update an intersection configuration |
+| `delete_intersection_config` | Archive an intersection configuration |
+| `run_intersection` | Run a screening intersection pipeline |
+| `list_intersection_runs` | List runs for an intersection configuration |
+| `get_intersection_run` | Get a specific intersection run with results |
+| `get_intersection_diff` | Compare two intersection runs to see what changed |
 
 ### Research (5 tools)
 
@@ -307,7 +316,7 @@ packages/mcp-client/
       strategy.ts         # 4 tools
       instruments.ts      # 8 tools
       comments.ts         # 2 tools
-      screening.ts        # 12 tools
+      screening.ts        # 21 tools
       research.ts         # 5 tools
       valuation.ts        # 7 tools
       ic.ts               # 10 tools

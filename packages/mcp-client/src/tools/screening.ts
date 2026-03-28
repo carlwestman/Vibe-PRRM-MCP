@@ -173,4 +173,127 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
+
+  // ─── Intersection configs ───────────────────────────────
+
+  server.tool(
+    "list_intersection_configs",
+    "List screening intersection configurations",
+    {
+      status: z.string().optional().describe("Filter by status"),
+    },
+    async (params) => {
+      const result = await api.get("/screening/intersections", { status: params.status });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "create_intersection_config",
+    "Create a screening intersection configuration that combines multiple screening profiles",
+    {
+      name: z.string().describe("Intersection config name"),
+      description: z.string().optional().describe("Description"),
+      pipeline: z.array(z.any()).describe("Pipeline steps defining which profiles to intersect"),
+      scoring: z.record(z.any()).optional().describe("Scoring configuration"),
+    },
+    async (params) => {
+      const result = await api.post("/screening/intersections", params);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_intersection_config",
+    "Get a specific screening intersection configuration",
+    {
+      id: z.string().describe("Intersection config ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/screening/intersections/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "update_intersection_config",
+    "Update a screening intersection configuration",
+    {
+      id: z.string().describe("Intersection config ID"),
+      name: z.string().optional().describe("Updated name"),
+      description: z.string().optional().describe("Updated description"),
+      pipeline: z.array(z.any()).optional().describe("Updated pipeline steps"),
+      scoring: z.record(z.any()).optional().describe("Updated scoring configuration"),
+    },
+    async ({ id, ...rest }) => {
+      const result = await api.patch(`/screening/intersections/${id}`, rest);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "delete_intersection_config",
+    "Archive a screening intersection configuration",
+    {
+      id: z.string().describe("Intersection config ID to archive"),
+    },
+    async ({ id }) => {
+      const result = await api.delete(`/screening/intersections/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "run_intersection",
+    "Run a screening intersection pipeline",
+    {
+      id: z.string().describe("Intersection config ID to run"),
+      forceRefresh: z.boolean().optional().describe("Force refresh underlying screens"),
+      dryRun: z.boolean().optional().describe("Dry run without persisting results"),
+      syncToUniverse: z.boolean().optional().describe("Sync results to the investment universe"),
+      triggeredBy: z.string().optional().describe("Who triggered the run"),
+      triggerType: z.string().optional().describe("How it was triggered (manual, scheduled, etc.)"),
+    },
+    async ({ id, ...rest }) => {
+      const result = await api.post(`/screening/intersections/${id}/run`, rest);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "list_intersection_runs",
+    "List runs for a screening intersection configuration",
+    {
+      id: z.string().describe("Intersection config ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/screening/intersections/${id}/runs`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_intersection_run",
+    "Get a specific intersection run with results",
+    {
+      id: z.string().describe("Intersection run ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/screening/intersection-runs/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_intersection_diff",
+    "Compare two intersection runs to see what changed",
+    {
+      id: z.string().describe("Base intersection run ID"),
+      otherId: z.string().describe("Other intersection run ID to compare against"),
+    },
+    async ({ id, otherId }) => {
+      const result = await api.get(`/screening/intersection-runs/${id}/diff/${otherId}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
 }
