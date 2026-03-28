@@ -64,13 +64,17 @@ export class PrrmApiClient {
     }
 
     if (!res.ok) {
+      const errMsg = typeof json?.error === "object"
+        ? json.error.message || JSON.stringify(json.error)
+        : json?.error || json?.message || `HTTP ${res.status}`;
+
       if (res.status === 401) {
         return { error: "Authentication failed — check PRRM_API_TOKEN" };
       }
       if (res.status === 404) {
-        return { error: json?.error || "Not found" };
+        return { error: errMsg || "Not found" };
       }
-      return { error: json?.error || json?.message || `HTTP ${res.status}` };
+      return { error: errMsg };
     }
 
     // Unwrap standard { data: ... } envelope
