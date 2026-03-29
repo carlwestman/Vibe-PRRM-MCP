@@ -173,6 +173,11 @@ describe("Valuation tools", () => {
     const data = await callTool("list_valuation_models");
     expect(Array.isArray(data)).toBe(true);
   });
+
+  it("list_scenarios returns data for an instrument", async () => {
+    const data = await callTool("list_scenarios", { instrumentId: 1 });
+    expect(data).toBeDefined();
+  });
 });
 
 // ─── Investment Committee ─────────────────────────────────
@@ -306,7 +311,7 @@ describe("Platform tools", () => {
     const data = await callTool("get_tool_catalog");
     expect(Array.isArray(data)).toBe(true);
     const totalTools = data.reduce((sum: number, m: any) => sum + m.tools.length, 0);
-    expect(totalTools).toBe(109);
+    expect(totalTools).toBe(121);
   });
 
   it("health_check returns data", async () => {

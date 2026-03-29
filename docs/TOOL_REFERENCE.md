@@ -1,6 +1,6 @@
 # PRRM MCP Tool Reference
 
-Complete reference for all 109 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
+Complete reference for all 121 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
 
 All parameters are validated with Zod schemas before the API call is made. Tool results are returned as JSON text content. Errors are never thrown -- they are returned as text so the agent can read and react to them.
 
@@ -13,7 +13,7 @@ All parameters are validated with Zod schemas before the API call is made. Tool 
 - [Comments](#comments) (2 tools)
 - [Screening](#screening) (34 tools)
 - [Research](#research) (5 tools)
-- [Valuation](#valuation) (7 tools)
+- [Valuation](#valuation) (19 tools)
 - [Investment Committee](#investment-committee) (10 tools)
 - [Portfolio](#portfolio) (7 tools)
 - [Performance](#performance) (9 tools)
@@ -850,6 +850,153 @@ List all valuation outputs for a specific instrument.
 | `instrument_id` | string | required | Instrument ID to get valuations for |
 
 **Endpoint:** `GET /valuation/outputs`
+
+---
+
+### `autofill_valuation`
+
+Auto-fill valuation model inputs from Borsdata data for an instrument.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `modelId` | number | required | Valuation model ID |
+| `instrumentId` | number | required | Instrument ID to pull data for |
+
+**Endpoint:** `GET /valuation/autofill`
+
+---
+
+### `list_scenarios`
+
+List valuation scenarios for an instrument.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instrumentId` | number | required | Instrument ID |
+
+**Endpoint:** `GET /valuation/scenarios`
+
+---
+
+### `create_scenario`
+
+Create a new valuation scenario.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `data` | Record<string, any> | optional | Scenario data |
+
+**Endpoint:** `POST /valuation/scenarios`
+
+---
+
+### `get_scenario`
+
+Get a specific valuation scenario by ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Scenario ID |
+
+**Endpoint:** `GET /valuation/scenarios/{id}`
+
+---
+
+### `update_scenario`
+
+Update an existing valuation scenario.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Scenario ID |
+| `data` | Record<string, any> | optional | Fields to update |
+
+**Endpoint:** `PATCH /valuation/scenarios/{id}`
+
+---
+
+### `delete_scenario`
+
+Delete a valuation scenario.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Scenario ID |
+
+**Endpoint:** `DELETE /valuation/scenarios/{id}`
+
+---
+
+### `copy_scenario`
+
+Create a copy of an existing valuation scenario.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Scenario ID to copy |
+
+**Endpoint:** `POST /valuation/scenarios/{id}/copy`
+
+---
+
+### `execute_scenario`
+
+Execute a valuation scenario to produce an output.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Scenario ID to execute |
+
+**Endpoint:** `POST /valuation/scenarios/{id}/execute`
+
+---
+
+### `get_scenario_history`
+
+Get version history for a valuation scenario.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Scenario ID |
+
+**Endpoint:** `GET /valuation/scenarios/{id}/history`
+
+---
+
+### `what_if_valuation`
+
+Run a disposable what-if analysis on a scenario without saving.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Scenario ID to base the what-if on |
+| `data` | Record<string, any> | optional | Override inputs for the what-if |
+
+**Endpoint:** `POST /valuation/scenarios/{id}/what-if`
+
+---
+
+### `compare_scenarios`
+
+Compare multiple valuation scenarios side by side.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `data` | Record<string, any> | optional | Comparison parameters (e.g. scenario IDs) |
+
+**Endpoint:** `POST /valuation/scenarios/compare`
+
+---
+
+### `export_scenarios_to_ic`
+
+Export valuation scenarios to an IC meeting agenda.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `data` | Record<string, any> | optional | Export parameters (e.g. scenario IDs, meeting ID) |
+
+**Endpoint:** `POST /valuation/scenarios/export-to-ic`
 
 ---
 

@@ -94,4 +94,160 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
+
+  // ─── Autofill ───────────────────────────────────────────
+
+  server.tool(
+    "autofill_valuation",
+    "Auto-fill valuation model inputs from Borsdata data for an instrument",
+    {
+      modelId: z.number().describe("Valuation model ID"),
+      instrumentId: z.number().describe("Instrument ID to pull data for"),
+    },
+    async ({ modelId, instrumentId }) => {
+      const result = await api.get("/valuation/autofill", {
+        modelId: modelId.toString(),
+        instrumentId: instrumentId.toString(),
+      });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  // ─── Scenarios ──────────────────────────────────────────
+
+  server.tool(
+    "list_scenarios",
+    "List valuation scenarios for an instrument",
+    {
+      instrumentId: z.number().describe("Instrument ID"),
+    },
+    async ({ instrumentId }) => {
+      const result = await api.get("/valuation/scenarios", {
+        instrumentId: instrumentId.toString(),
+      });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "create_scenario",
+    "Create a new valuation scenario",
+    {
+      data: z.record(z.any()).optional().describe("Scenario data"),
+    },
+    async ({ data }) => {
+      const result = await api.post("/valuation/scenarios", data);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_scenario",
+    "Get a specific valuation scenario by ID",
+    {
+      id: z.string().describe("Scenario ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/valuation/scenarios/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "update_scenario",
+    "Update an existing valuation scenario",
+    {
+      id: z.string().describe("Scenario ID"),
+      data: z.record(z.any()).optional().describe("Fields to update"),
+    },
+    async ({ id, data }) => {
+      const result = await api.patch(`/valuation/scenarios/${id}`, data);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "delete_scenario",
+    "Delete a valuation scenario",
+    {
+      id: z.string().describe("Scenario ID"),
+    },
+    async ({ id }) => {
+      const result = await api.delete(`/valuation/scenarios/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "copy_scenario",
+    "Create a copy of an existing valuation scenario",
+    {
+      id: z.string().describe("Scenario ID to copy"),
+    },
+    async ({ id }) => {
+      const result = await api.post(`/valuation/scenarios/${id}/copy`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "execute_scenario",
+    "Execute a valuation scenario to produce an output",
+    {
+      id: z.string().describe("Scenario ID to execute"),
+    },
+    async ({ id }) => {
+      const result = await api.post(`/valuation/scenarios/${id}/execute`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_scenario_history",
+    "Get version history for a valuation scenario",
+    {
+      id: z.string().describe("Scenario ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/valuation/scenarios/${id}/history`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "what_if_valuation",
+    "Run a disposable what-if analysis on a scenario without saving",
+    {
+      id: z.string().describe("Scenario ID to base the what-if on"),
+      data: z.record(z.any()).optional().describe("Override inputs for the what-if"),
+    },
+    async ({ id, data }) => {
+      const result = await api.post(`/valuation/scenarios/${id}/what-if`, data);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "compare_scenarios",
+    "Compare multiple valuation scenarios side by side",
+    {
+      data: z.record(z.any()).optional().describe("Comparison parameters (e.g. scenario IDs)"),
+    },
+    async ({ data }) => {
+      const result = await api.post("/valuation/scenarios/compare", data);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "export_scenarios_to_ic",
+    "Export valuation scenarios to an IC meeting agenda",
+    {
+      data: z.record(z.any()).optional().describe("Export parameters (e.g. scenario IDs, meeting ID)"),
+    },
+    async ({ data }) => {
+      const result = await api.post("/valuation/scenarios/export-to-ic", data);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
 }

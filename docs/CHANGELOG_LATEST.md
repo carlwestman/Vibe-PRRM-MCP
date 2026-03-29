@@ -1,6 +1,6 @@
 # PRRM MCP — Change Report
 
-**Date:** 2026-03-28
+**Date:** 2026-03-29
 **MCP Package Version:** 0.1.0
 **Repo:** https://github.com/carlwestman/Vibe-PRRM-MCP
 
@@ -17,29 +17,28 @@
 
 | Tool Name | Module | Description | Parameters |
 |-----------|--------|-------------|------------|
-| `get_current_universe` | screening.ts | Get the current active investment universe | none |
-| `list_universe_versions` | screening.ts | List historical universe versions | `limit` (int), `offset` (int) |
-| `get_universe_version` | screening.ts | Get a specific universe version by ID | `id` (string, req) |
-| `get_universe_diff` | screening.ts | Diff two universe versions | `from` (int, req), `to` (int, req) |
-| `get_universe_staleness` | screening.ts | Check how stale the current universe is | none |
-| `get_position_alerts` | screening.ts | Get position-level alerts for the universe | none |
-| `get_universe_overrides` | screening.ts | Get active manual overrides | none |
-| `propose_universe` | screening.ts | Create a universe proposal from an intersection run | `intersectionRunId` (int, req), `selectedResultIds` (int[]), `overrides` (array), `proposedBy` (string) |
-| `get_proposal` | screening.ts | Get a universe proposal by ID | `id` (string, req) |
-| `update_proposal_instrument` | screening.ts | Toggle instrument inclusion in a proposal | `id` (string, req), `instId` (string, req), `included` (bool, req) |
-| `add_override_to_proposal` | screening.ts | Add a manual override instrument to a proposal | `id` (string, req), `borsdataInsId` (int, req), `displayName` (string, req), `rationale` (string, req) |
-| `remove_override_from_proposal` | screening.ts | Remove a manual override from a proposal | `id` (string, req), `instId` (string, req) |
-| `commit_universe` | screening.ts | Commit a proposal, replacing the active universe | `proposalId` (int, req) |
+| `autofill_valuation` | valuation.ts | Auto-fill valuation inputs from Borsdata data | `modelId` (int, req), `instrumentId` (int, req) |
+| `list_scenarios` | valuation.ts | List valuation scenarios for an instrument | `instrumentId` (int, req) |
+| `create_scenario` | valuation.ts | Create a new valuation scenario | `data` (object, optional) |
+| `get_scenario` | valuation.ts | Get a specific valuation scenario by ID | `id` (string, req) |
+| `update_scenario` | valuation.ts | Update an existing valuation scenario | `id` (string, req), `data` (object, optional) |
+| `delete_scenario` | valuation.ts | Delete a valuation scenario | `id` (string, req) |
+| `copy_scenario` | valuation.ts | Create a copy of an existing scenario | `id` (string, req) |
+| `execute_scenario` | valuation.ts | Execute a scenario to produce an output | `id` (string, req) |
+| `get_scenario_history` | valuation.ts | Get version history for a scenario | `id` (string, req) |
+| `what_if_valuation` | valuation.ts | Run a disposable what-if analysis | `id` (string, req), `data` (object, optional) |
+| `compare_scenarios` | valuation.ts | Compare multiple scenarios side by side | `data` (object, optional) |
+| `export_scenarios_to_ic` | valuation.ts | Export scenarios to an IC meeting agenda | `data` (object, optional) |
 
-> **Action required:** Register these 13 tools in your agent's available tool list.
+> **Action required:** Register these 12 tools in your agent's available tool list. Note: several scenario endpoints have no request body schema defined yet in the API spec — they accept an optional generic `data` object that will be refined in a future API release.
 
 ## No changes
 
-96 tools unchanged from previous sync.
+109 tools unchanged from previous sync.
 
 ## Full tool count
 
-Total: **109 tools** across **12 modules** (was 96 tools).
+Total: **121 tools** across **12 modules** (was 109 tools).
 
 | Module | Tools |
 |--------|-------|
@@ -48,7 +47,7 @@ Total: **109 tools** across **12 modules** (was 96 tools).
 | comments | 2 |
 | screening & universe | 34 |
 | research | 5 |
-| valuation | 7 |
+| valuation | 19 |
 | ic | 10 |
 | portfolio | 7 |
 | performance | 9 |

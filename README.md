@@ -118,7 +118,7 @@ Add the following to your `openclaw.json`:
 
 ## Tool Catalog
 
-The server exposes 109 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
+The server exposes 121 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
 
 ### Strategy (4 tools)
 
@@ -198,7 +198,7 @@ The server exposes 109 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `update_research_report` | Update an existing research report |
 | `search_research_semantic` | Semantic search across research reports |
 
-### Valuation (7 tools)
+### Valuation (19 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -209,6 +209,18 @@ The server exposes 109 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `execute_valuation` | Execute a valuation model against an instrument with input data |
 | `get_valuation_output` | Get a specific valuation output by ID |
 | `list_valuations_by_instrument` | List all valuation outputs for a specific instrument |
+| `autofill_valuation` | Auto-fill valuation inputs from Borsdata data |
+| `list_scenarios` | List valuation scenarios for an instrument |
+| `create_scenario` | Create a new valuation scenario |
+| `get_scenario` | Get a specific valuation scenario by ID |
+| `update_scenario` | Update an existing valuation scenario |
+| `delete_scenario` | Delete a valuation scenario |
+| `copy_scenario` | Create a copy of an existing scenario |
+| `execute_scenario` | Execute a valuation scenario to produce an output |
+| `get_scenario_history` | Get version history for a scenario |
+| `what_if_valuation` | Run a disposable what-if analysis on a scenario |
+| `compare_scenarios` | Compare multiple scenarios side by side |
+| `export_scenarios_to_ic` | Export scenarios to an IC meeting agenda |
 
 ### Investment Committee (10 tools)
 
@@ -331,7 +343,7 @@ packages/mcp-client/
       comments.ts         # 2 tools
       screening.ts        # 34 tools
       research.ts         # 5 tools
-      valuation.ts        # 7 tools
+      valuation.ts        # 19 tools
       ic.ts               # 10 tools
       portfolio.ts        # 7 tools
       performance.ts      # 9 tools
