@@ -135,4 +135,61 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
+
+  // ─── Risk analytics ─────────────────────────────────────
+
+  server.tool(
+    "get_risk_analytics",
+    "Get portfolio risk metrics from historical simulation (VaR, CVaR, volatility)",
+    {
+      lookback_days: z.number().optional().describe("Lookback period in days"),
+    },
+    async (params) => {
+      const result = await api.get("/risk/analytics", {
+        lookback_days: params.lookback_days?.toString(),
+      });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_risk_contributions",
+    "Get per-position risk contributions to portfolio risk",
+    {
+      lookback_days: z.number().optional().describe("Lookback period in days"),
+    },
+    async (params) => {
+      const result = await api.get("/risk/contributions", {
+        lookback_days: params.lookback_days?.toString(),
+      });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_correlation_matrix",
+    "Get position correlation matrix",
+    {
+      lookback_days: z.number().optional().describe("Lookback period in days"),
+    },
+    async (params) => {
+      const result = await api.get("/risk/correlations", {
+        lookback_days: params.lookback_days?.toString(),
+      });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "run_stress_test",
+    "Run a stress test scenario against the portfolio",
+    {
+      scenario: z.string().describe("Stress test scenario name or description"),
+      shocks: z.record(z.any()).describe("Shock parameters (e.g. { equity: -0.2, rates: 0.01 })"),
+    },
+    async (params) => {
+      const result = await api.post("/risk/stress-test", params);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
 }

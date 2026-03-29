@@ -1,6 +1,6 @@
 # PRRM MCP — Change Report
 
-**Date:** 2026-03-29
+**Date:** 2026-03-30
 **MCP Package Version:** 0.1.0
 **Repo:** https://github.com/carlwestman/Vibe-PRRM-MCP
 
@@ -17,28 +17,28 @@
 
 | Tool Name | Module | Description | Parameters |
 |-----------|--------|-------------|------------|
-| `autofill_valuation` | valuation.ts | Auto-fill valuation inputs from Borsdata data | `modelId` (int, req), `instrumentId` (int, req) |
-| `list_scenarios` | valuation.ts | List valuation scenarios for an instrument | `instrumentId` (int, req) |
-| `create_scenario` | valuation.ts | Create a new valuation scenario | `data` (object, optional) |
-| `get_scenario` | valuation.ts | Get a specific valuation scenario by ID | `id` (string, req) |
-| `update_scenario` | valuation.ts | Update an existing valuation scenario | `id` (string, req), `data` (object, optional) |
-| `delete_scenario` | valuation.ts | Delete a valuation scenario | `id` (string, req) |
-| `copy_scenario` | valuation.ts | Create a copy of an existing scenario | `id` (string, req) |
-| `execute_scenario` | valuation.ts | Execute a scenario to produce an output | `id` (string, req) |
-| `get_scenario_history` | valuation.ts | Get version history for a scenario | `id` (string, req) |
-| `what_if_valuation` | valuation.ts | Run a disposable what-if analysis | `id` (string, req), `data` (object, optional) |
-| `compare_scenarios` | valuation.ts | Compare multiple scenarios side by side | `data` (object, optional) |
-| `export_scenarios_to_ic` | valuation.ts | Export scenarios to an IC meeting agenda | `data` (object, optional) |
+| `update_trade` | portfolio.ts | Update an existing trade | `id` (string, req), `instrumentId` (int), `shares` (number), `pricePerShare` (number), `fxRate` (number), `notes` (string) |
+| `delete_trade` | portfolio.ts | Delete a trade from the portfolio | `id` (string, req) |
+| `get_risk_analytics` | risk.ts | Get portfolio risk metrics (VaR, CVaR, volatility) | `lookback_days` (int, optional) |
+| `get_risk_contributions` | risk.ts | Get per-position risk contributions | `lookback_days` (int, optional) |
+| `get_correlation_matrix` | risk.ts | Get position correlation matrix | `lookback_days` (int, optional) |
+| `run_stress_test` | risk.ts | Run a stress test scenario | `scenario` (string, req), `shocks` (object, req) |
 
-> **Action required:** Register these 12 tools in your agent's available tool list. Note: several scenario endpoints have no request body schema defined yet in the API spec — they accept an optional generic `data` object that will be refined in a future API release.
+> **Action required:** Register these 6 tools in your agent's available tool list.
+
+## Not implemented
+
+| Endpoint | Reason |
+|----------|--------|
+| `POST /portfolio/import` (importBrokerCsv) | Uses multipart/form-data file upload — not supported by the MCP JSON transport |
 
 ## No changes
 
-109 tools unchanged from previous sync.
+121 tools unchanged from previous sync.
 
 ## Full tool count
 
-Total: **121 tools** across **12 modules** (was 109 tools).
+Total: **127 tools** across **12 modules** (was 121 tools).
 
 | Module | Tools |
 |--------|-------|
@@ -49,8 +49,8 @@ Total: **121 tools** across **12 modules** (was 109 tools).
 | research | 5 |
 | valuation | 19 |
 | ic | 10 |
-| portfolio | 7 |
+| portfolio | 9 |
 | performance | 9 |
-| risk | 10 |
+| risk | 14 |
 | notifications | 4 |
 | platform | 9 |

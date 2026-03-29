@@ -1,6 +1,6 @@
 # PRRM MCP Tool Reference
 
-Complete reference for all 121 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
+Complete reference for all 127 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
 
 All parameters are validated with Zod schemas before the API call is made. Tool results are returned as JSON text content. Errors are never thrown -- they are returned as text so the agent can read and react to them.
 
@@ -15,9 +15,9 @@ All parameters are validated with Zod schemas before the API call is made. Tool 
 - [Research](#research) (5 tools)
 - [Valuation](#valuation) (19 tools)
 - [Investment Committee](#investment-committee) (10 tools)
-- [Portfolio](#portfolio) (7 tools)
+- [Portfolio](#portfolio) (9 tools)
 - [Performance](#performance) (9 tools)
-- [Risk](#risk) (10 tools)
+- [Risk](#risk) (14 tools)
 - [Notifications](#notifications) (4 tools)
 - [Platform](#platform) (9 tools)
 - [Error Handling](#error-handling)
@@ -1227,6 +1227,35 @@ Get portfolio foreign exchange exposure breakdown.
 
 ---
 
+### `update_trade`
+
+Update an existing trade.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Trade ID |
+| `instrumentId` | number | optional | Updated instrument ID |
+| `shares` | number | optional | Updated number of shares |
+| `pricePerShare` | number | optional | Updated price per share |
+| `fxRate` | number | optional | Updated FX rate |
+| `notes` | string | optional | Updated notes |
+
+**Endpoint:** `PATCH /portfolio/trades/{id}`
+
+---
+
+### `delete_trade`
+
+Delete a trade from the portfolio.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Trade ID to delete |
+
+**Endpoint:** `DELETE /portfolio/trades/{id}`
+
+---
+
 ## Performance
 
 ### `get_performance_summary`
@@ -1490,6 +1519,55 @@ Acknowledge a risk alert event.
 | `acknowledgedBy` | string | optional | Person acknowledging the alert |
 
 **Endpoint:** `PATCH /risk/alerts/events/{id}`
+
+---
+
+### `get_risk_analytics`
+
+Get portfolio risk metrics from historical simulation (VaR, CVaR, volatility).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `lookback_days` | number | optional | Lookback period in days |
+
+**Endpoint:** `GET /risk/analytics`
+
+---
+
+### `get_risk_contributions`
+
+Get per-position risk contributions to portfolio risk.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `lookback_days` | number | optional | Lookback period in days |
+
+**Endpoint:** `GET /risk/contributions`
+
+---
+
+### `get_correlation_matrix`
+
+Get position correlation matrix.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `lookback_days` | number | optional | Lookback period in days |
+
+**Endpoint:** `GET /risk/correlations`
+
+---
+
+### `run_stress_test`
+
+Run a stress test scenario against the portfolio.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `scenario` | string | required | Stress test scenario name or description |
+| `shocks` | object | required | Shock parameters (e.g. { equity: -0.2, rates: 0.01 }) |
+
+**Endpoint:** `POST /risk/stress-test`
 
 ---
 

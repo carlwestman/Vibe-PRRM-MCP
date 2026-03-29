@@ -259,6 +259,21 @@ describe("Risk tools", () => {
     const data = await callTool("list_risk_alert_events");
     expect(data).toBeDefined();
   });
+
+  it("get_risk_analytics returns data", async () => {
+    const data = await callTool("get_risk_analytics", {});
+    expect(data).toBeDefined();
+  });
+
+  it("get_risk_contributions returns data", async () => {
+    const data = await callTool("get_risk_contributions", {});
+    expect(data).toBeDefined();
+  });
+
+  it("get_correlation_matrix returns data", async () => {
+    const data = await callTool("get_correlation_matrix", {});
+    expect(data).toBeDefined();
+  });
 });
 
 // ─── Performance ──────────────────────────────────────────
@@ -311,7 +326,7 @@ describe("Platform tools", () => {
     const data = await callTool("get_tool_catalog");
     expect(Array.isArray(data)).toBe(true);
     const totalTools = data.reduce((sum: number, m: any) => sum + m.tools.length, 0);
-    expect(totalTools).toBe(121);
+    expect(totalTools).toBe(127);
   });
 
   it("health_check returns data", async () => {

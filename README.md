@@ -118,7 +118,7 @@ Add the following to your `openclaw.json`:
 
 ## Tool Catalog
 
-The server exposes 121 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
+The server exposes 127 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
 
 ### Strategy (4 tools)
 
@@ -237,7 +237,7 @@ The server exposes 121 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `update_decision_status` | Update the status of an IC decision |
 | `list_decisions` | List IC decisions |
 
-### Portfolio (7 tools)
+### Portfolio (9 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -248,6 +248,8 @@ The server exposes 121 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `get_portfolio_summary` | Get a high-level portfolio summary including NAV, returns, and key metrics |
 | `get_allocation` | Get portfolio allocation breakdown |
 | `get_fx_exposure` | Get portfolio foreign exchange exposure breakdown |
+| `update_trade` | Update an existing trade |
+| `delete_trade` | Delete a trade from the portfolio |
 
 ### Performance (9 tools)
 
@@ -263,7 +265,7 @@ The server exposes 121 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `create_performance_report` | Create a new performance report |
 | `get_performance_report` | Get a specific performance report by ID |
 
-### Risk (10 tools)
+### Risk (14 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -277,6 +279,10 @@ The server exposes 121 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `delete_risk_alert_trigger` | Delete a risk alert trigger |
 | `list_risk_alert_events` | List risk alert events |
 | `acknowledge_risk_alert_event` | Acknowledge a risk alert event |
+| `get_risk_analytics` | Get portfolio risk metrics (VaR, CVaR, volatility) |
+| `get_risk_contributions` | Get per-position risk contributions |
+| `get_correlation_matrix` | Get position correlation matrix |
+| `run_stress_test` | Run a stress test scenario against the portfolio |
 
 ### Notifications (4 tools)
 
@@ -345,9 +351,9 @@ packages/mcp-client/
       research.ts         # 5 tools
       valuation.ts        # 19 tools
       ic.ts               # 10 tools
-      portfolio.ts        # 7 tools
+      portfolio.ts        # 9 tools
       performance.ts      # 9 tools
-      risk.ts             # 10 tools
+      risk.ts             # 14 tools
       notifications.ts    # 4 tools
       platform.ts         # 9 tools
 ```

@@ -88,4 +88,33 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
+
+  server.tool(
+    "update_trade",
+    "Update an existing trade",
+    {
+      id: z.string().describe("Trade ID"),
+      instrumentId: z.number().optional().describe("Updated instrument ID"),
+      shares: z.number().optional().describe("Updated number of shares"),
+      pricePerShare: z.number().optional().describe("Updated price per share"),
+      fxRate: z.number().optional().describe("Updated FX rate"),
+      notes: z.string().optional().describe("Updated notes"),
+    },
+    async ({ id, ...rest }) => {
+      const result = await api.patch(`/portfolio/trades/${id}`, rest);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "delete_trade",
+    "Delete a trade from the portfolio",
+    {
+      id: z.string().describe("Trade ID to delete"),
+    },
+    async ({ id }) => {
+      const result = await api.delete(`/portfolio/trades/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
 }
