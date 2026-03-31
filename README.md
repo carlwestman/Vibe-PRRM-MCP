@@ -118,7 +118,7 @@ Add the following to your `openclaw.json`:
 
 ## Tool Catalog
 
-The server exposes 127 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
+The server exposes 145 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
 
 ### Strategy (4 tools)
 
@@ -237,7 +237,7 @@ The server exposes 127 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `update_decision_status` | Update the status of an IC decision |
 | `list_decisions` | List IC decisions |
 
-### Portfolio (9 tools)
+### Portfolio (27 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -250,6 +250,24 @@ The server exposes 127 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `get_fx_exposure` | Get portfolio foreign exchange exposure breakdown |
 | `update_trade` | Update an existing trade |
 | `delete_trade` | Delete a trade from the portfolio |
+| `get_cash_balances` | Get cash balances across currencies |
+| `record_deposit` | Record a cash deposit |
+| `get_cash_transactions` | List cash transactions with optional filters |
+| `record_withdrawal` | Record a cash withdrawal |
+| `get_portfolio_config` | Get portfolio configuration |
+| `update_portfolio_config` | Update portfolio configuration |
+| `get_dividends` | List dividends with optional filters |
+| `record_dividend` | Record a dividend payment |
+| `sync_dividends` | Sync dividends from Borsdata |
+| `create_import_session` | Create a trade import session |
+| `get_import_session` | Get an import session with parsed rows |
+| `cancel_import_session` | Cancel an import session |
+| `commit_import_session` | Commit an import session, creating trades |
+| `update_import_row` | Update a row in an import session |
+| `get_margin_summary` | Get margin utilization summary |
+| `get_realised_pnl` | Get realized P&L from closed positions |
+| `list_sub_portfolios` | List all sub-portfolios (sleeves) |
+| `create_sub_portfolio` | Create a new sub-portfolio |
 
 ### Performance (9 tools)
 
@@ -351,7 +369,7 @@ packages/mcp-client/
       research.ts         # 5 tools
       valuation.ts        # 19 tools
       ic.ts               # 10 tools
-      portfolio.ts        # 9 tools
+      portfolio.ts        # 27 tools
       performance.ts      # 9 tools
       risk.ts             # 14 tools
       notifications.ts    # 4 tools

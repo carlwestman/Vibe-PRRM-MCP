@@ -1,6 +1,6 @@
 # PRRM MCP — Change Report
 
-**Date:** 2026-03-30
+**Date:** 2026-03-31
 **MCP Package Version:** 0.1.0
 **Repo:** https://github.com/carlwestman/Vibe-PRRM-MCP
 
@@ -17,28 +17,34 @@
 
 | Tool Name | Module | Description | Parameters |
 |-----------|--------|-------------|------------|
-| `update_trade` | portfolio.ts | Update an existing trade | `id` (string, req), `instrumentId` (int), `shares` (number), `pricePerShare` (number), `fxRate` (number), `notes` (string) |
-| `delete_trade` | portfolio.ts | Delete a trade from the portfolio | `id` (string, req) |
-| `get_risk_analytics` | risk.ts | Get portfolio risk metrics (VaR, CVaR, volatility) | `lookback_days` (int, optional) |
-| `get_risk_contributions` | risk.ts | Get per-position risk contributions | `lookback_days` (int, optional) |
-| `get_correlation_matrix` | risk.ts | Get position correlation matrix | `lookback_days` (int, optional) |
-| `run_stress_test` | risk.ts | Run a stress test scenario | `scenario` (string, req), `shocks` (object, req) |
+| `get_cash_balances` | portfolio.ts | Get cash balances across currencies | `sub_portfolio_id` (int, optional) |
+| `record_deposit` | portfolio.ts | Record a cash deposit | `data` (object) |
+| `get_cash_transactions` | portfolio.ts | List cash transactions | `sub_portfolio_id` (int), `currency` (string), `type` (string), `limit` (int), `offset` (int) |
+| `record_withdrawal` | portfolio.ts | Record a cash withdrawal | `data` (object) |
+| `get_portfolio_config` | portfolio.ts | Get portfolio configuration | none |
+| `update_portfolio_config` | portfolio.ts | Update portfolio configuration | `data` (object) |
+| `get_dividends` | portfolio.ts | List dividends | `view` (string), `instrument_id` (int), `year` (int) |
+| `record_dividend` | portfolio.ts | Record a dividend payment | `data` (object) |
+| `sync_dividends` | portfolio.ts | Sync dividends from Borsdata | none |
+| `create_import_session` | portfolio.ts | Create a trade import session | none |
+| `get_import_session` | portfolio.ts | Get an import session with parsed rows | `id` (string, req) |
+| `cancel_import_session` | portfolio.ts | Cancel an import session | `id` (string, req) |
+| `commit_import_session` | portfolio.ts | Commit an import session, creating trades | `id` (string, req) |
+| `update_import_row` | portfolio.ts | Update a row in an import session | `id` (string, req), `rowId` (string, req), `data` (object) |
+| `get_margin_summary` | portfolio.ts | Get margin utilization summary | none |
+| `get_realised_pnl` | portfolio.ts | Get realized P&L from closed positions | `sub_portfolio_id` (int), `date_from` (string), `date_to` (string) |
+| `list_sub_portfolios` | portfolio.ts | List all sub-portfolios (sleeves) | none |
+| `create_sub_portfolio` | portfolio.ts | Create a new sub-portfolio | `data` (object) |
 
-> **Action required:** Register these 6 tools in your agent's available tool list.
-
-## Not implemented
-
-| Endpoint | Reason |
-|----------|--------|
-| `POST /portfolio/import` (importBrokerCsv) | Uses multipart/form-data file upload — not supported by the MCP JSON transport |
+> **Action required:** Register these 18 tools in your agent's available tool list. Note: several write endpoints (deposit, withdrawal, dividend, config, sub-portfolio) have no request body schema defined yet — they accept an optional generic `data` object.
 
 ## No changes
 
-121 tools unchanged from previous sync.
+127 tools unchanged from previous sync.
 
 ## Full tool count
 
-Total: **127 tools** across **12 modules** (was 121 tools).
+Total: **145 tools** across **12 modules** (was 127 tools).
 
 | Module | Tools |
 |--------|-------|
@@ -49,7 +55,7 @@ Total: **127 tools** across **12 modules** (was 121 tools).
 | research | 5 |
 | valuation | 19 |
 | ic | 10 |
-| portfolio | 9 |
+| portfolio | 27 |
 | performance | 9 |
 | risk | 14 |
 | notifications | 4 |

@@ -1,6 +1,6 @@
 # PRRM MCP Tool Reference
 
-Complete reference for all 127 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
+Complete reference for all 145 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
 
 All parameters are validated with Zod schemas before the API call is made. Tool results are returned as JSON text content. Errors are never thrown -- they are returned as text so the agent can read and react to them.
 
@@ -15,7 +15,7 @@ All parameters are validated with Zod schemas before the API call is made. Tool 
 - [Research](#research) (5 tools)
 - [Valuation](#valuation) (19 tools)
 - [Investment Committee](#investment-committee) (10 tools)
-- [Portfolio](#portfolio) (9 tools)
+- [Portfolio](#portfolio) (27 tools)
 - [Performance](#performance) (9 tools)
 - [Risk](#risk) (14 tools)
 - [Notifications](#notifications) (4 tools)
@@ -1253,6 +1253,232 @@ Delete a trade from the portfolio.
 | `id` | string | required | Trade ID to delete |
 
 **Endpoint:** `DELETE /portfolio/trades/{id}`
+
+---
+
+### `get_cash_balances`
+
+Get cash balances across currencies.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sub_portfolio_id` | number | optional | Filter by sub-portfolio ID |
+
+**Endpoint:** `GET /portfolio/cash`
+
+---
+
+### `record_deposit`
+
+Record a cash deposit.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `data` | object | optional | Deposit details |
+
+**Endpoint:** `POST /portfolio/cash/deposit`
+
+---
+
+### `get_cash_transactions`
+
+List cash transactions with optional filters.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sub_portfolio_id` | number | optional | Filter by sub-portfolio |
+| `currency` | string | optional | Filter by currency |
+| `type` | string | optional | Filter by transaction type |
+| `limit` | number | optional | Max results |
+| `offset` | number | optional | Pagination offset |
+
+**Endpoint:** `GET /portfolio/cash/transactions`
+
+---
+
+### `record_withdrawal`
+
+Record a cash withdrawal.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `data` | object | optional | Withdrawal details |
+
+**Endpoint:** `POST /portfolio/cash/withdraw`
+
+---
+
+### `get_portfolio_config`
+
+Get portfolio configuration (base currency, etc.).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /portfolio/config`
+
+---
+
+### `update_portfolio_config`
+
+Update portfolio configuration.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `data` | object | optional | Configuration fields to update |
+
+**Endpoint:** `PATCH /portfolio/config`
+
+---
+
+### `get_dividends`
+
+List dividends with optional filters.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `view` | string | optional | View type |
+| `instrument_id` | number | optional | Filter by instrument |
+| `year` | number | optional | Filter by year |
+
+**Endpoint:** `GET /portfolio/dividends`
+
+---
+
+### `record_dividend`
+
+Record a dividend payment.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `data` | object | optional | Dividend details |
+
+**Endpoint:** `POST /portfolio/dividends`
+
+---
+
+### `sync_dividends`
+
+Sync dividends from Borsdata for all holdings.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `POST /portfolio/dividends/sync`
+
+---
+
+### `create_import_session`
+
+Create a new trade import session (for CSV/broker imports).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `POST /portfolio/import/sessions`
+
+---
+
+### `get_import_session`
+
+Get an import session with its parsed rows.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Import session ID |
+
+**Endpoint:** `GET /portfolio/import/sessions/{id}`
+
+---
+
+### `cancel_import_session`
+
+Cancel an import session and discard its data.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Import session ID |
+
+**Endpoint:** `DELETE /portfolio/import/sessions/{id}`
+
+---
+
+### `commit_import_session`
+
+Commit an import session, creating trades from its rows.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Import session ID |
+
+**Endpoint:** `POST /portfolio/import/sessions/{id}/commit`
+
+---
+
+### `update_import_row`
+
+Update a row in an import session (fix mapping, amounts, etc.).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Import session ID |
+| `rowId` | string | required | Row ID within the session |
+| `data` | object | optional | Fields to update on the row |
+
+**Endpoint:** `PATCH /portfolio/import/sessions/{id}/rows/{rowId}`
+
+---
+
+### `get_margin_summary`
+
+Get margin utilization summary.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /portfolio/margin`
+
+---
+
+### `get_realised_pnl`
+
+Get realized P&L summary from closed positions.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sub_portfolio_id` | number | optional | Filter by sub-portfolio |
+| `date_from` | string | optional | Start date (YYYY-MM-DD) |
+| `date_to` | string | optional | End date (YYYY-MM-DD) |
+
+**Endpoint:** `GET /portfolio/realised-pnl`
+
+---
+
+### `list_sub_portfolios`
+
+List all sub-portfolios (sleeves).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| *(none)* | | | |
+
+**Endpoint:** `GET /portfolio/sub-portfolios`
+
+---
+
+### `create_sub_portfolio`
+
+Create a new sub-portfolio (sleeve).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `data` | object | optional | Sub-portfolio details (name, description, etc.) |
+
+**Endpoint:** `POST /portfolio/sub-portfolios`
 
 ---
 
