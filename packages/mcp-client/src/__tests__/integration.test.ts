@@ -186,11 +186,16 @@ describe("IC tools", () => {
   let meetingId: string;
 
   it("list_ic_meetings returns data", async () => {
-    const data = await callTool("list_ic_meetings");
+    const data = await callTool("list_ic_meetings", {});
     expect(data).toBeDefined();
     if (Array.isArray(data) && data.length > 0) {
       meetingId = String(data[0].id);
     }
+  });
+
+  it("list_ic_meetings with status filter returns data", async () => {
+    const data = await callTool("list_ic_meetings", { status: "Closed" });
+    expect(data).toBeDefined();
   });
 
   it("get_ic_meeting returns data or error", async () => {
@@ -201,7 +206,12 @@ describe("IC tools", () => {
   });
 
   it("list_decisions returns data", async () => {
-    const data = await callTool("list_decisions");
+    const data = await callTool("list_decisions", {});
+    expect(data).toBeDefined();
+  });
+
+  it("list_decisions with filters returns data", async () => {
+    const data = await callTool("list_decisions", { limit: 5 });
     expect(data).toBeDefined();
   });
 });
@@ -356,7 +366,7 @@ describe("Platform tools", () => {
     const data = await callTool("get_tool_catalog");
     expect(Array.isArray(data)).toBe(true);
     const totalTools = data.reduce((sum: number, m: any) => sum + m.tools.length, 0);
-    expect(totalTools).toBe(145);
+    expect(totalTools).toBe(149);
   });
 
   it("health_check returns data", async () => {

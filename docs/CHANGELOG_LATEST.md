@@ -17,34 +17,69 @@
 
 | Tool Name | Module | Description | Parameters |
 |-----------|--------|-------------|------------|
-| `get_cash_balances` | portfolio.ts | Get cash balances across currencies | `sub_portfolio_id` (int, optional) |
-| `record_deposit` | portfolio.ts | Record a cash deposit | `data` (object) |
-| `get_cash_transactions` | portfolio.ts | List cash transactions | `sub_portfolio_id` (int), `currency` (string), `type` (string), `limit` (int), `offset` (int) |
-| `record_withdrawal` | portfolio.ts | Record a cash withdrawal | `data` (object) |
-| `get_portfolio_config` | portfolio.ts | Get portfolio configuration | none |
-| `update_portfolio_config` | portfolio.ts | Update portfolio configuration | `data` (object) |
-| `get_dividends` | portfolio.ts | List dividends | `view` (string), `instrument_id` (int), `year` (int) |
-| `record_dividend` | portfolio.ts | Record a dividend payment | `data` (object) |
-| `sync_dividends` | portfolio.ts | Sync dividends from Borsdata | none |
-| `create_import_session` | portfolio.ts | Create a trade import session | none |
-| `get_import_session` | portfolio.ts | Get an import session with parsed rows | `id` (string, req) |
-| `cancel_import_session` | portfolio.ts | Cancel an import session | `id` (string, req) |
-| `commit_import_session` | portfolio.ts | Commit an import session, creating trades | `id` (string, req) |
-| `update_import_row` | portfolio.ts | Update a row in an import session | `id` (string, req), `rowId` (string, req), `data` (object) |
-| `get_margin_summary` | portfolio.ts | Get margin utilization summary | none |
-| `get_realised_pnl` | portfolio.ts | Get realized P&L from closed positions | `sub_portfolio_id` (int), `date_from` (string), `date_to` (string) |
-| `list_sub_portfolios` | portfolio.ts | List all sub-portfolios (sleeves) | none |
-| `create_sub_portfolio` | portfolio.ts | Create a new sub-portfolio | `data` (object) |
+| `update_agenda_item` | ic.ts | Update an existing IC agenda item | `id` (string, req), `title`, `description`, `sortOrder` |
+| `remove_agenda_item` | ic.ts | Remove an agenda item | `id` (string, req) |
+| `reorder_agenda_items` | ic.ts | Set display order for agenda items | `meetingId` (number, req), `orderedIds` (number[], req) |
+| `post_preread` | ic.ts | Attach a pre-read document to an agenda item | `agendaItemId` (number, req), `title` (string, req), `body` (string, req), `author` (string) |
 
-> **Action required:** Register these 18 tools in your agent's available tool list. Note: several write endpoints (deposit, withdrawal, dividend, config, sub-portfolio) have no request body schema defined yet — they accept an optional generic `data` object.
+> **Action required:** Register these 4 tools in your agent's available tool list.
+
+## Updated tools (parameter changes)
+
+| Tool Name | Change Type | Details |
+|-----------|-------------|---------|
+| `add_agenda_item` | **breaking** | Removed `instrumentId`, `presenter`, `order`. Added `meetingId` (number, in body), `description` (string), `sortOrder` (number), `links` (array of `{entityType, entityId}`) |
+| `record_decision` | **breaking** | Removed `decision` (enum), `instrumentId`, `rationale`, `author`. Now uses `meetingId` (number, req), `text` (string, req), `assignee` (string), `dueDate` (string YYYY-MM-DD) |
+| `update_decision_status` | **breaking** | Status enum changed from `pending/executed/cancelled` to `Decided/In Progress/Executed/Reviewed`. Added `note` (string, optional) |
+| `post_minutes` | **breaking** | Param renamed: `minutes` → `body`. Added `author` (string, optional). Body now sends `{meetingId, body, author}` |
+| `update_minutes` | **breaking** | Now takes minutes record `id` (not meeting_id). Param renamed: `minutes` → `body` |
+| `list_decisions` | added params | `status`, `meetingId`, `assignee`, `limit`, `offset` — all optional filters |
+| `list_ic_meetings` | added params | `status`, `limit`, `offset` — all optional filters |
+
+> **Action required:** Update tool schemas/configs in your agent orchestration. All 7 tools above have parameter changes — 5 are breaking.
+
+## Schema fixes (tool → REST API alignment)
+
+Several tool schemas were rejecting payloads the REST API accepts. These are all **breaking** changes to the MCP tool schemas.
+
+### Screening
+
+| Tool | Fix |
+|------|-----|
+| `create_screening_profile` | Criteria items: replaced `field` with `metricId`, `calcGroup`, `calc`, and added `valueMax`. `includeFilters` is now required (pass `{}`). `scope` documented as `nordic` or `global`. |
+| `update_screening_profile` | Same criteria schema fix as above. |
+| `create_intersection_config` | Pipeline items: replaced `z.any()` with discriminated union — `gate` (`type` + `profileId`) and `threshold` (`type` + `profileIds` + `min`). `scoring` now typed as `{ profileWeights: { [profileId]: weight } }`. |
+| `update_intersection_config` | Same pipeline/scoring schema fix. |
+
+### Valuation
+
+| Tool | Fix |
+|------|-----|
+| `execute_valuation` | `inputData` changed from `z.record` to passthrough (`z.any`) — avoids stripping nested model-specific structure. |
+| `create_valuation_model` | `template` changed from `z.record` to passthrough — model-type-specific, no MCP-side validation. |
+| `update_valuation_model` | Same `template` passthrough fix. |
+| `create_scenario` | Replaced opaque `data` wrapper with explicit top-level fields: `name` (req), `modelId` (req), `instrumentId` (req), `inputData`, `description`, `author`. |
+| `update_scenario` | Replaced `data` wrapper with explicit fields: `name`, `inputData`, `description`. |
+| `compare_scenarios` | Replaced `data` wrapper with `scenarioIds` (string[], req). |
+| `export_scenarios_to_ic` | Replaced `data` wrapper with `scenarioIds` (string[], req) + `meetingId` (number, req). |
+| `what_if_valuation` | Replaced `data` wrapper with `inputData` (passthrough). |
+
+### IC
+
+| Tool | Fix |
+|------|-----|
+| `post_minutes` | Param renamed `body` → `minutes` to match API field name. Removed stale `meetingId`/`author` from request body. |
+| `update_minutes` | Param renamed `body` → `minutes` to match API. |
+
+> **Action required:** These 14 schema fixes unblock screening, valuation, and IC meeting prep workflows. Update agent tool configs — especially `create_screening_profile` criteria format and all valuation tools that previously used the `data` wrapper pattern.
 
 ## No changes
 
-127 tools unchanged from previous sync.
+138 tools unchanged.
 
 ## Full tool count
 
-Total: **145 tools** across **12 modules** (was 127 tools).
+Total: **149 tools** across **12 modules** (was 145 tools).
 
 | Module | Tools |
 |--------|-------|
@@ -54,7 +89,7 @@ Total: **145 tools** across **12 modules** (was 127 tools).
 | screening & universe | 34 |
 | research | 5 |
 | valuation | 19 |
-| ic | 10 |
+| ic | 14 |
 | portfolio | 27 |
 | performance | 9 |
 | risk | 14 |

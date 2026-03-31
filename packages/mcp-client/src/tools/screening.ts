@@ -30,14 +30,17 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
     "Create a new screening profile with criteria and thresholds",
     {
       name: z.string().describe("Profile name"),
-      scope: z.string().describe("Screening scope (e.g. nordic, global)"),
+      scope: z.string().describe("Screening scope: nordic or global"),
       description: z.string().optional().describe("Profile description"),
       criteria: z.array(z.object({
-        field: z.string().describe("Field/KPI identifier"),
-        operator: z.string().describe("Comparison operator (gt, lt, gte, lte, eq)"),
+        metricId: z.string().describe("Metric ID in borsdata:KPI_ID format, e.g. borsdata:2"),
+        calcGroup: z.string().describe("Time period: last, 1year, 3year, 5year, 7year, 10year"),
+        calc: z.string().describe("Calculation: latest, mean, high, low, cagr, stabil"),
+        operator: z.string().describe("Comparison: greater_than, less_than, between, equal, top_n, bottom_n"),
         value: z.any().describe("Threshold value"),
+        valueMax: z.any().optional().describe("Upper bound for between operator"),
       })).describe("Screening criteria"),
-      includeFilters: z.record(z.any()).optional().describe("Include filters"),
+      includeFilters: z.record(z.any()).describe("Include filters (pass {} if none)"),
       excludeFilters: z.record(z.any()).optional().describe("Exclude filters"),
     },
     async (params) => {
@@ -52,12 +55,15 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
     {
       id: z.string().describe("Profile ID to update"),
       name: z.string().optional().describe("Updated name"),
-      scope: z.string().optional().describe("Updated scope"),
+      scope: z.string().optional().describe("Updated scope: nordic or global"),
       description: z.string().optional().describe("Updated description"),
       criteria: z.array(z.object({
-        field: z.string().describe("Field/KPI identifier"),
-        operator: z.string().describe("Comparison operator"),
+        metricId: z.string().describe("Metric ID in borsdata:KPI_ID format, e.g. borsdata:2"),
+        calcGroup: z.string().describe("Time period: last, 1year, 3year, 5year, 7year, 10year"),
+        calc: z.string().describe("Calculation: latest, mean, high, low, cagr, stabil"),
+        operator: z.string().describe("Comparison: greater_than, less_than, between, equal, top_n, bottom_n"),
         value: z.any().describe("Threshold value"),
+        valueMax: z.any().optional().describe("Upper bound for between operator"),
       })).optional().describe("Updated criteria"),
       includeFilters: z.record(z.any()).optional().describe("Updated include filters"),
       excludeFilters: z.record(z.any()).optional().describe("Updated exclude filters"),
@@ -194,8 +200,20 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
     {
       name: z.string().describe("Intersection config name"),
       description: z.string().optional().describe("Description"),
-      pipeline: z.array(z.any()).describe("Pipeline steps defining which profiles to intersect"),
-      scoring: z.record(z.any()).optional().describe("Scoring configuration"),
+      pipeline: z.array(z.union([
+        z.object({
+          type: z.literal("gate").describe("Gate: instrument must pass this profile"),
+          profileId: z.number().describe("Screening profile ID"),
+        }),
+        z.object({
+          type: z.literal("threshold").describe("Threshold: instrument must pass min of these profiles"),
+          profileIds: z.array(z.number()).describe("Screening profile IDs"),
+          min: z.number().describe("Minimum number of profiles that must pass"),
+        }),
+      ])).describe("Pipeline stages — gate (single profile, must pass) or threshold (multiple profiles, min N must pass)"),
+      scoring: z.object({
+        profileWeights: z.record(z.number()).optional().describe("Profile ID to weight mapping, e.g. { '1': 0.5, '2': 0.3 }"),
+      }).optional().describe("Scoring configuration"),
     },
     async (params) => {
       const result = await api.post("/screening/intersections", params);
@@ -222,8 +240,20 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
       id: z.string().describe("Intersection config ID"),
       name: z.string().optional().describe("Updated name"),
       description: z.string().optional().describe("Updated description"),
-      pipeline: z.array(z.any()).optional().describe("Updated pipeline steps"),
-      scoring: z.record(z.any()).optional().describe("Updated scoring configuration"),
+      pipeline: z.array(z.union([
+        z.object({
+          type: z.literal("gate"),
+          profileId: z.number().describe("Screening profile ID"),
+        }),
+        z.object({
+          type: z.literal("threshold"),
+          profileIds: z.array(z.number()).describe("Screening profile IDs"),
+          min: z.number().describe("Minimum number of profiles that must pass"),
+        }),
+      ])).optional().describe("Updated pipeline stages"),
+      scoring: z.object({
+        profileWeights: z.record(z.number()).optional().describe("Profile ID to weight mapping"),
+      }).optional().describe("Updated scoring configuration"),
     },
     async ({ id, ...rest }) => {
       const result = await api.patch(`/screening/intersections/${id}`, rest);

@@ -31,7 +31,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     {
       name: z.string().describe("Model name"),
       type: z.enum(["dcf", "comparables", "ddm", "nav", "custom"]).describe("Model type"),
-      template: z.record(z.any()).describe("Model template definition"),
+      template: z.any().describe("JSON template defining model inputs and formula — structure varies by model type, passed through to the API"),
       description: z.string().optional().describe("Model description"),
       author: z.string().optional().describe("Model author"),
     },
@@ -48,7 +48,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
       id: z.string().describe("Model ID to update"),
       name: z.string().optional().describe("Updated name"),
       description: z.string().optional().describe("Updated description"),
-      template: z.record(z.any()).optional().describe("Updated template definition"),
+      template: z.any().optional().describe("Updated template definition — passed through to the API"),
     },
     async ({ id, ...rest }) => {
       const result = await api.patch(`/valuation/models/${id}`, rest);
@@ -62,7 +62,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     {
       modelId: z.string().describe("Valuation model ID to execute"),
       instrumentId: z.string().describe("Target instrument ID"),
-      inputData: z.record(z.any()).describe("Input data for the valuation model"),
+      inputData: z.any().describe("Input assumptions for the model — structure varies by model type, passed through to the API without validation"),
       author: z.string().describe("Person running the valuation"),
     },
     async (params) => {
@@ -131,12 +131,17 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "create_scenario",
-    "Create a new valuation scenario",
+    "Create a new valuation scenario. Pass all fields at the top level (e.g. name, modelId, instrumentId, inputData).",
     {
-      data: z.record(z.any()).optional().describe("Scenario data"),
+      name: z.string().describe("Scenario name"),
+      modelId: z.string().describe("Valuation model ID"),
+      instrumentId: z.string().describe("Target instrument ID"),
+      inputData: z.any().optional().describe("Input assumptions — structure varies by model type, passed through to the API"),
+      description: z.string().optional().describe("Scenario description"),
+      author: z.string().optional().describe("Scenario author"),
     },
-    async ({ data }) => {
-      const result = await api.post("/valuation/scenarios", data);
+    async (params) => {
+      const result = await api.post("/valuation/scenarios", params);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -158,10 +163,12 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     "Update an existing valuation scenario",
     {
       id: z.string().describe("Scenario ID"),
-      data: z.record(z.any()).optional().describe("Fields to update"),
+      name: z.string().optional().describe("Updated name"),
+      inputData: z.any().optional().describe("Updated input assumptions — passed through to the API"),
+      description: z.string().optional().describe("Updated description"),
     },
-    async ({ id, data }) => {
-      const result = await api.patch(`/valuation/scenarios/${id}`, data);
+    async ({ id, ...rest }) => {
+      const result = await api.patch(`/valuation/scenarios/${id}`, rest);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -219,10 +226,10 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     "Run a disposable what-if analysis on a scenario without saving",
     {
       id: z.string().describe("Scenario ID to base the what-if on"),
-      data: z.record(z.any()).optional().describe("Override inputs for the what-if"),
+      inputData: z.any().optional().describe("Override input assumptions for the what-if — passed through to the API"),
     },
-    async ({ id, data }) => {
-      const result = await api.post(`/valuation/scenarios/${id}/what-if`, data);
+    async ({ id, inputData }) => {
+      const result = await api.post(`/valuation/scenarios/${id}/what-if`, { inputData });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -231,10 +238,10 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     "compare_scenarios",
     "Compare multiple valuation scenarios side by side",
     {
-      data: z.record(z.any()).optional().describe("Comparison parameters (e.g. scenario IDs)"),
+      scenarioIds: z.array(z.string()).describe("Scenario IDs to compare"),
     },
-    async ({ data }) => {
-      const result = await api.post("/valuation/scenarios/compare", data);
+    async (params) => {
+      const result = await api.post("/valuation/scenarios/compare", params);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -243,10 +250,11 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     "export_scenarios_to_ic",
     "Export valuation scenarios to an IC meeting agenda",
     {
-      data: z.record(z.any()).optional().describe("Export parameters (e.g. scenario IDs, meeting ID)"),
+      scenarioIds: z.array(z.string()).describe("Scenario IDs to export"),
+      meetingId: z.number().describe("Target IC meeting ID"),
     },
-    async ({ data }) => {
-      const result = await api.post("/valuation/scenarios/export-to-ic", data);
+    async (params) => {
+      const result = await api.post("/valuation/scenarios/export-to-ic", params);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

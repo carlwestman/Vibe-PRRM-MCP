@@ -1,6 +1,6 @@
 # PRRM MCP Tool Reference
 
-Complete reference for all 145 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
+Complete reference for all 149 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
 
 All parameters are validated with Zod schemas before the API call is made. Tool results are returned as JSON text content. Errors are never thrown -- they are returned as text so the agent can read and react to them.
 
@@ -14,7 +14,7 @@ All parameters are validated with Zod schemas before the API call is made. Tool 
 - [Screening](#screening) (34 tools)
 - [Research](#research) (5 tools)
 - [Valuation](#valuation) (19 tools)
-- [Investment Committee](#investment-committee) (10 tools)
+- [Investment Committee](#investment-committee) (14 tools)
 - [Portfolio](#portfolio) (27 tools)
 - [Performance](#performance) (9 tools)
 - [Risk](#risk) (14 tools)
@@ -1034,7 +1034,9 @@ List investment committee meetings.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| *(none)* | | | |
+| `status` | string | optional | Filter by meeting status |
+| `limit` | number | optional | Max results |
+| `offset` | number | optional | Pagination offset |
 
 **Endpoint:** `GET /ic/meetings`
 
@@ -1058,13 +1060,68 @@ Add an agenda item to an IC meeting.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `meeting_id` | string | required | Meeting ID |
+| `meetingId` | number | required | Meeting ID |
 | `title` | string | required | Agenda item title |
-| `instrumentId` | number | optional | Associated instrument ID |
-| `presenter` | string | optional | Who will present this item |
-| `order` | number | optional | Display order |
+| `description` | string | optional | Longer description of the agenda item |
+| `sortOrder` | number | optional | Display order (0-based) |
+| `links` | array of `{ entityType, entityId }` | optional | Links to instruments, research reports, or valuations |
 
-**Endpoint:** `POST /ic/meetings/{meeting_id}/agenda`
+**Endpoint:** `POST /ic/meetings/{meetingId}/agenda`
+
+---
+
+### `update_agenda_item`
+
+Update an existing IC agenda item.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Agenda item ID |
+| `title` | string | optional | New title |
+| `description` | string | optional | New description |
+| `sortOrder` | number | optional | New sort position |
+
+**Endpoint:** `PATCH /ic/agenda/{id}`
+
+---
+
+### `remove_agenda_item`
+
+Remove an agenda item from an IC meeting.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | required | Agenda item ID |
+
+**Endpoint:** `DELETE /ic/agenda/{id}`
+
+---
+
+### `reorder_agenda_items`
+
+Set the display order for all agenda items in a meeting.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `meetingId` | number | required | Meeting ID |
+| `orderedIds` | number[] | required | Agenda item IDs in desired order |
+
+**Endpoint:** `POST /ic/meetings/{meetingId}/agenda/reorder`
+
+---
+
+### `post_preread`
+
+Attach a pre-read document to an IC agenda item.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `agendaItemId` | number | required | Agenda item ID |
+| `title` | string | required | Pre-read title |
+| `body` | string | required | Pre-read content in Markdown |
+| `author` | string | optional | Author (default: PM) |
+
+**Endpoint:** `POST /ic/prereads`
 
 ---
 
@@ -1075,7 +1132,8 @@ Post minutes for an IC meeting.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `meeting_id` | string | required | Meeting ID |
-| `minutes` | string | required | Minutes content in markdown |
+| `body` | string | required | Minutes content in Markdown |
+| `author` | string | optional | Author of the minutes (default: PM) |
 
 **Endpoint:** `POST /ic/meetings/{meeting_id}/minutes`
 
@@ -1087,10 +1145,10 @@ Update existing minutes for an IC meeting.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `meeting_id` | string | required | Meeting ID |
-| `minutes` | string | required | Updated minutes content |
+| `id` | string | required | Minutes record ID |
+| `body` | string | required | Updated minutes content |
 
-**Endpoint:** `PATCH /ic/meetings/{meeting_id}/minutes`
+**Endpoint:** `PATCH /ic/meetings/{id}/minutes`
 
 ---
 
@@ -1101,10 +1159,9 @@ Record a decision from an IC meeting.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `meetingId` | number | required | Meeting ID where decision was made |
-| `decision` | enum: `approve`, `reject`, `defer`, `modify` | required | Decision outcome |
-| `instrumentId` | number | optional | Related instrument ID |
-| `rationale` | string | optional | Rationale for the decision |
-| `author` | string | optional | Person recording the decision |
+| `text` | string | required | Decision text (e.g. 'Buy 50 shares of ASSA ABLOY at market') |
+| `assignee` | string | optional | Person responsible for executing the decision |
+| `dueDate` | string | optional | Due date (YYYY-MM-DD) |
 
 **Endpoint:** `POST /ic/decisions`
 
@@ -1117,7 +1174,8 @@ Update the status of an IC decision.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `id` | string | required | Decision ID |
-| `status` | enum: `pending`, `executed`, `cancelled` | required | New status |
+| `status` | enum: `Decided`, `In Progress`, `Executed`, `Reviewed` | required | New status |
+| `note` | string | optional | Explanation of the status change |
 
 **Endpoint:** `PATCH /ic/decisions/{id}`
 
@@ -1125,11 +1183,15 @@ Update the status of an IC decision.
 
 ### `list_decisions`
 
-List IC decisions.
+List IC decisions with optional filters.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| *(none)* | | | |
+| `status` | string | optional | Filter by status (Decided, In Progress, Executed, Reviewed) |
+| `meetingId` | number | optional | Filter by meeting ID |
+| `assignee` | string | optional | Filter by assignee |
+| `limit` | number | optional | Max results |
+| `offset` | number | optional | Pagination offset |
 
 **Endpoint:** `GET /ic/decisions`
 

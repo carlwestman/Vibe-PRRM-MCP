@@ -118,7 +118,7 @@ Add the following to your `openclaw.json`:
 
 ## Tool Catalog
 
-The server exposes 145 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
+The server exposes 149 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
 
 ### Strategy (4 tools)
 
@@ -222,20 +222,24 @@ The server exposes 145 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `compare_scenarios` | Compare multiple scenarios side by side |
 | `export_scenarios_to_ic` | Export scenarios to an IC meeting agenda |
 
-### Investment Committee (10 tools)
+### Investment Committee (14 tools)
 
 | Tool | Description |
 |------|-------------|
 | `create_ic_meeting` | Create a new investment committee meeting |
 | `update_ic_meeting` | Update an IC meeting (status and/or date) |
-| `list_ic_meetings` | List investment committee meetings |
+| `list_ic_meetings` | List investment committee meetings with optional filters |
 | `get_ic_meeting` | Get detailed information about a specific IC meeting |
-| `add_agenda_item` | Add an agenda item to an IC meeting |
+| `add_agenda_item` | Add an agenda item with links to instruments/research/valuations |
+| `update_agenda_item` | Update an existing agenda item |
+| `remove_agenda_item` | Remove an agenda item |
+| `reorder_agenda_items` | Set the display order for agenda items |
+| `post_preread` | Attach a pre-read document to an agenda item |
 | `post_minutes` | Post minutes for an IC meeting |
-| `update_minutes` | Update existing minutes for an IC meeting |
-| `record_decision` | Record a decision from an IC meeting |
-| `update_decision_status` | Update the status of an IC decision |
-| `list_decisions` | List IC decisions |
+| `update_minutes` | Update existing minutes |
+| `record_decision` | Record a decision with assignee and due date |
+| `update_decision_status` | Update decision status (Decided/In Progress/Executed/Reviewed) |
+| `list_decisions` | List IC decisions with optional filters |
 
 ### Portfolio (27 tools)
 
@@ -368,7 +372,7 @@ packages/mcp-client/
       screening.ts        # 34 tools
       research.ts         # 5 tools
       valuation.ts        # 19 tools
-      ic.ts               # 10 tools
+      ic.ts               # 14 tools
       portfolio.ts        # 27 tools
       performance.ts      # 9 tools
       risk.ts             # 14 tools
