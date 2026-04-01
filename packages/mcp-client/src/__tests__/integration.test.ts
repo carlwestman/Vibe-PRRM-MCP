@@ -366,7 +366,7 @@ describe("Platform tools", () => {
     const data = await callTool("get_tool_catalog");
     expect(Array.isArray(data)).toBe(true);
     const totalTools = data.reduce((sum: number, m: any) => sum + m.tools.length, 0);
-    expect(totalTools).toBe(149);
+    expect(totalTools).toBe(145);
   });
 
   it("health_check returns data", async () => {

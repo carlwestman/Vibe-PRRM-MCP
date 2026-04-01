@@ -67,72 +67,12 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
     {
       meetingId: z.number().describe("Meeting ID"),
       title: z.string().describe("Agenda item title"),
-      description: z.string().optional().describe("Longer description of the agenda item"),
-      sortOrder: z.number().optional().describe("Display order (0-based)"),
-      links: z.array(z.object({
-        entityType: z.string().describe("Linked entity type (instrument, research, valuation)"),
-        entityId: z.number().describe("Linked entity ID"),
-      })).optional().describe("Links to instruments, research reports, or valuations"),
+      instrumentId: z.string().optional().describe("Associated instrument ID (UUID)"),
+      presenter: z.string().optional().describe("Name of the person presenting this item"),
+      order: z.number().optional().describe("Sequence position in the agenda"),
     },
-    async (params) => {
-      const result = await api.post(`/ic/meetings/${params.meetingId}/agenda`, params);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "update_agenda_item",
-    "Update an existing IC agenda item",
-    {
-      id: z.string().describe("Agenda item ID"),
-      title: z.string().optional().describe("New title"),
-      description: z.string().optional().describe("New description"),
-      sortOrder: z.number().optional().describe("New sort position"),
-    },
-    async ({ id, ...rest }) => {
-      const result = await api.patch(`/ic/agenda/${id}`, rest);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "remove_agenda_item",
-    "Remove an agenda item from an IC meeting",
-    {
-      id: z.string().describe("Agenda item ID"),
-    },
-    async ({ id }) => {
-      const result = await api.delete(`/ic/agenda/${id}`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "reorder_agenda_items",
-    "Set the display order for all agenda items in a meeting",
-    {
-      meetingId: z.number().describe("Meeting ID"),
-      orderedIds: z.array(z.number()).describe("Agenda item IDs in desired order"),
-    },
-    async ({ meetingId, orderedIds }) => {
-      const result = await api.post(`/ic/meetings/${meetingId}/agenda/reorder`, { orderedIds });
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  // ─── Pre-reads ──────────────────────────────────────────
-
-  server.tool(
-    "post_preread",
-    "Attach a pre-read document to an IC agenda item",
-    {
-      agendaItemId: z.number().describe("Agenda item ID"),
-      title: z.string().describe("Pre-read title"),
-      body: z.string().describe("Pre-read content in Markdown"),
-      author: z.string().optional().describe("Author (default: PM)"),
-    },
-    async ({ agendaItemId, title, body, author }) => {
-      const result = await api.post("/ic/prereads", { agendaItemId, title, body, author });
+    async ({ meetingId, ...rest }) => {
+      const result = await api.post(`/ic/meetings/${meetingId}/agenda`, rest);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

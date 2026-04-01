@@ -1,6 +1,6 @@
 # PRRM MCP — Change Report
 
-**Date:** 2026-03-31
+**Date:** 2026-04-01
 **MCP Package Version:** 0.1.0
 **Repo:** https://github.com/carlwestman/Vibe-PRRM-MCP
 
@@ -13,26 +13,26 @@
    ```
 2. Review the tool changes below and update your agent tool configurations accordingly.
 
-## New tools added
+## Removed tools (no API endpoint exists)
 
-| Tool Name | Module | Description | Parameters |
-|-----------|--------|-------------|------------|
-| `update_agenda_item` | ic.ts | Update an existing IC agenda item | `id` (string, req), `title`, `description`, `sortOrder` |
-| `remove_agenda_item` | ic.ts | Remove an agenda item | `id` (string, req) |
-| `reorder_agenda_items` | ic.ts | Set display order for agenda items | `meetingId` (number, req), `orderedIds` (number[], req) |
-| `post_preread` | ic.ts | Attach a pre-read document to an agenda item | `agendaItemId` (number, req), `title` (string, req), `body` (string, req), `author` (string) |
+| Tool Name | Reason |
+|-----------|--------|
+| `update_agenda_item` | `PATCH /ic/agenda/{id}` does not exist in the API |
+| `remove_agenda_item` | `DELETE /ic/agenda/{id}` does not exist in the API |
+| `reorder_agenda_items` | `POST /ic/meetings/{id}/agenda/reorder` does not exist in the API |
+| `post_preread` | `POST /ic/prereads` does not exist in the API (returned HTML 404) |
 
-> **Action required:** Register these 4 tools in your agent's available tool list.
+> **Action required:** Remove these 4 tools from your agent's available tool list. They were ghost tools hitting non-existent endpoints.
 
 ## Updated tools (parameter changes)
 
 | Tool Name | Change Type | Details |
 |-----------|-------------|---------|
-| `add_agenda_item` | **breaking** | Removed `instrumentId`, `presenter`, `order`. Added `meetingId` (number, in body), `description` (string), `sortOrder` (number), `links` (array of `{entityType, entityId}`) |
+| `add_agenda_item` | **breaking** | Restored correct API fields: `instrumentId` (string UUID), `presenter` (string), `order` (number). Removed incorrect `description`, `sortOrder`, `links`. `meetingId` no longer leaks into request body. |
 | `record_decision` | **breaking** | Removed `decision` (enum), `instrumentId`, `rationale`, `author`. Now uses `meetingId` (number, req), `text` (string, req), `assignee` (string), `dueDate` (string YYYY-MM-DD) |
 | `update_decision_status` | **breaking** | Status enum changed from `pending/executed/cancelled` to `Decided/In Progress/Executed/Reviewed`. Added `note` (string, optional) |
-| `post_minutes` | **breaking** | Param renamed: `minutes` → `body`. Added `author` (string, optional). Body now sends `{meetingId, body, author}` |
-| `update_minutes` | **breaking** | Now takes minutes record `id` (not meeting_id). Param renamed: `minutes` → `body` |
+| `post_minutes` | **breaking** | Param is `minutes` (not `body`). Sends `{ minutes }` to API. Removed stale `meetingId`/`author` from request body. |
+| `update_minutes` | **breaking** | Now takes minutes record `id` (not meeting_id). Param is `minutes` (not `body`). |
 | `list_decisions` | added params | `status`, `meetingId`, `assignee`, `limit`, `offset` — all optional filters |
 | `list_ic_meetings` | added params | `status`, `limit`, `offset` — all optional filters |
 
@@ -75,11 +75,11 @@ Several tool schemas were rejecting payloads the REST API accepts. These are all
 
 ## No changes
 
-138 tools unchanged.
+131 tools unchanged.
 
 ## Full tool count
 
-Total: **149 tools** across **12 modules** (was 145 tools).
+Total: **145 tools** across **12 modules** (was 149 — removed 4 ghost tools).
 
 | Module | Tools |
 |--------|-------|
@@ -89,7 +89,7 @@ Total: **149 tools** across **12 modules** (was 145 tools).
 | screening & universe | 34 |
 | research | 5 |
 | valuation | 19 |
-| ic | 14 |
+| ic | 10 |
 | portfolio | 27 |
 | performance | 9 |
 | risk | 14 |
