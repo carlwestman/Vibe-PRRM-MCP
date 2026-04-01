@@ -13,85 +13,115 @@
    ```
 2. Review the tool changes below and update your agent tool configurations accordingly.
 
-## Removed tools (no API endpoint exists)
+## Critical fixes
 
-| Tool Name | Reason |
-|-----------|--------|
-| `update_agenda_item` | `PATCH /ic/agenda/{id}` does not exist in the API |
-| `remove_agenda_item` | `DELETE /ic/agenda/{id}` does not exist in the API |
-| `reorder_agenda_items` | `POST /ic/meetings/{id}/agenda/reorder` does not exist in the API |
-| `post_preread` | `POST /ic/prereads` does not exist in the API (returned HTML 404) |
+These tools were completely broken (wrong schemas, wrong field names, wrong enum values). Every call from an agent would fail or produce incorrect behavior.
 
-> **Action required:** Remove these 4 tools from your agent's available tool list. They were ghost tools hitting non-existent endpoints.
+| Tool Name | Issue | Fix |
+|-----------|-------|-----|
+| `record_decision` | Entirely wrong schema — was sending `text`, `assignee`, `dueDate` instead of `decision`, `rationale`, `author` | Reverted to API schema: `meetingId` (string, req), `decision` (enum: approve/reject/defer/modify, req), `instrumentId` (string, opt), `rationale` (string, opt), `author` (string, opt) |
+| `update_decision_status` | Wrong enum values (Decided/In Progress/Executed/Reviewed) and extra `note` field | Reverted to API schema: `status` (enum: pending/executed/cancelled, opt). Removed `note`. |
+| `create_research_report` | `instrumentId` was number (should be string), `type` accepted free text (should be enum), `author` was required (should be optional) | `instrumentId` → string. `type` → enum: "Instrument Research", "Thematic", "Sector", "Macro", "Ad-Hoc", "Other". `author` → optional. Added `recommendation` enum (buy/hold/sell/under_review) and `status` enum (draft/review/published/archived). |
+| `register_trade` | `instrumentId` was number, API expects string | `instrumentId` → string |
+| `create_instrument` | Enum values were Title Case (Active/Inactive/Delisted), API expects lowercase | `assetClass` → enum: equity, fixed_income, commodity, fx, crypto, other. `status` → enum: active, inactive, delisted. |
+| `update_instrument` | Same enum case mismatch | Same fix as `create_instrument` |
+| `publish_risk_report` | `type` accepted free text, `author` was required | `type` → enum: daily, weekly, ad_hoc. `author` → optional. |
+| `update_ic_meeting` | `status` accepted any string | `status` → enum: scheduled, in_progress, completed, cancelled |
+
+> **Action required:** These 8 tools have completely new schemas. Update all agent tool configurations. The `record_decision` and `update_decision_status` changes are the most impactful — agents must use the new field names and enum values.
+
+## Restored tools (previously removed, now with correct routes)
+
+These tools were removed in the 2026-03-31 update because they returned 404. The root cause was incorrect API routes — the tools were hitting flat paths like `/ic/agenda/{id}` instead of nested paths like `/ic/meetings/{meetingId}/agenda/{itemId}`. They have been restored with the correct routes.
+
+### IC Agenda management (3 restored tools)
+
+| Tool Name | Route | Parameters |
+|-----------|-------|------------|
+| `update_agenda_item` | `PATCH /ic/meetings/{meetingId}/agenda/{itemId}` | `meetingId` (number, req), `itemId` (number, req), `title` (string, opt), `description` (string, opt), `sortOrder` (number, opt) |
+| `remove_agenda_item` | `DELETE /ic/meetings/{meetingId}/agenda/{itemId}` | `meetingId` (number, req), `itemId` (number, req) |
+| `reorder_agenda_items` | `POST /ic/meetings/{meetingId}/agenda/reorder` | `meetingId` (number, req), `orderedIds` (number[], req) |
+
+### IC Pre-reads (5 new tools)
+
+| Tool Name | Route | Parameters |
+|-----------|-------|------------|
+| `list_prereads` | `GET /ic/meetings/{meetingId}/agenda/{itemId}/prereads` | `meetingId` (number, req), `itemId` (number, req) |
+| `post_preread` | `POST /ic/meetings/{meetingId}/agenda/{itemId}/prereads` | `meetingId` (number, req), `itemId` (number, req), `title` (string, req), `body` (string, req), `author` (string, opt) |
+| `get_preread` | `GET /ic/meetings/{meetingId}/agenda/{itemId}/prereads/{prereadId}` | `meetingId` (number, req), `itemId` (number, req), `prereadId` (number, req) |
+| `update_preread` | `PATCH /ic/meetings/{meetingId}/agenda/{itemId}/prereads/{prereadId}` | `meetingId` (number, req), `itemId` (number, req), `prereadId` (number, req), `title` (string, opt), `body` (string, opt), `author` (string, opt) |
+| `delete_preread` | `DELETE /ic/meetings/{meetingId}/agenda/{itemId}/prereads/{prereadId}` | `meetingId` (number, req), `itemId` (number, req), `prereadId` (number, req) |
+
+> **Action required:** Register these 8 tools. Note that all IC agenda and pre-read tools require `meetingId` — agents must look up the meeting ID first (via `list_ic_meetings` or `get_ic_meeting`).
+
+## New tools added
+
+### Screening & Universe (3 tools)
+
+| Tool Name | Route | Description | Parameters |
+|-----------|-------|-------------|------------|
+| `evaluate_instrument_against_profile` | `GET /screening/profiles/{id}/evaluate/{instrumentId}` | Evaluate a single instrument against a screening profile's criteria | `profileId` (string, req), `instrumentId` (string, req) |
+| `create_universe_override` | `POST /universe/overrides` | Add a manual override instrument directly to the universe | `displayName` (string, req), `rationale` (string, req), `ticker`, `assetClass`, `sector`, `country`, `exchange`, `currency`, `borsdataInsId`, `borsdataUrlName`, `instrumentId`, `externalIds` (all opt) |
+| `bulk_create_instruments` | `POST /universe/bulk-create-instruments` | Bulk-create instruments from a universe version's instrument list | `versionInstrumentIds` (number[], req) |
+
+### Portfolio (10 tools)
+
+| Tool Name | Route | Description | Parameters |
+|-----------|-------|-------------|------------|
+| `update_position_price` | `PATCH /portfolio/positions/{instrumentId}` | Update the price on a portfolio position | `instrumentId` (string, req), `price` (number, req), `priceDate` (string, opt) |
+| `assign_position_sleeve` | `PATCH /portfolio/positions/{instrumentId}/sleeve` | Assign a position to a sub-portfolio sleeve | `instrumentId` (string, req), `subPortfolioId` (number, opt — omit to unassign) |
+| `import_portfolio` | `POST /portfolio/import` | Import portfolio data (CSV/broker file upload) | `data` (any, req — passthrough) |
+| `import_transactions` | `POST /portfolio/import/transactions` | Import transactions from an external source | `data` (any, req), `dry_run` (boolean, opt), `sub_portfolio_id` (number, opt) |
+| `update_cash_transaction` | `PATCH /portfolio/cash/transactions/{id}` | Update a cash transaction | `id` (string, req), `type` (enum: deposit/withdrawal/margin_draw/margin_repay, opt), `amount`, `currency`, `fxRate`, `date`, `notes` (all opt) |
+| `delete_cash_transaction` | `DELETE /portfolio/cash/transactions/{id}` | Delete a cash transaction | `id` (string, req) |
+| `get_sub_portfolio_summary` | `GET /portfolio/sub-portfolios/summary` | Get summary metrics for all sub-portfolios | (none) |
+| `get_sub_portfolio` | `GET /portfolio/sub-portfolios/{id}` | Get a specific sub-portfolio by ID | `id` (string, req) |
+| `update_sub_portfolio` | `PATCH /portfolio/sub-portfolios/{id}` | Update a sub-portfolio | `id` (string, req), `name` (string, opt), `description` (string, opt), `sortOrder` (number, opt) |
+| `delete_sub_portfolio` | `DELETE /portfolio/sub-portfolios/{id}` | Delete a sub-portfolio | `id` (string, req) |
+
+> **Action required:** Register these 13 new tools in your agent's available tool list.
 
 ## Updated tools (parameter changes)
 
-| Tool Name | Change Type | Details |
-|-----------|-------------|---------|
-| `add_agenda_item` | **breaking** | Restored correct API fields: `instrumentId` (string UUID), `presenter` (string), `order` (number). Removed incorrect `description`, `sortOrder`, `links`. `meetingId` no longer leaks into request body. |
-| `record_decision` | **breaking** | Removed `decision` (enum), `instrumentId`, `rationale`, `author`. Now uses `meetingId` (number, req), `text` (string, req), `assignee` (string), `dueDate` (string YYYY-MM-DD) |
-| `update_decision_status` | **breaking** | Status enum changed from `pending/executed/cancelled` to `Decided/In Progress/Executed/Reviewed`. Added `note` (string, optional) |
-| `post_minutes` | **breaking** | Param is `minutes` (not `body`). Sends `{ minutes }` to API. Removed stale `meetingId`/`author` from request body. |
-| `update_minutes` | **breaking** | Now takes minutes record `id` (not meeting_id). Param is `minutes` (not `body`). |
-| `list_decisions` | added params | `status`, `meetingId`, `assignee`, `limit`, `offset` — all optional filters |
-| `list_ic_meetings` | added params | `status`, `limit`, `offset` — all optional filters |
+### Portfolio data wrapper fixes
 
-> **Action required:** Update tool schemas/configs in your agent orchestration. All 7 tools above have parameter changes — 5 are breaking.
+These tools previously used an opaque `data: z.record(z.any())` parameter. Agents had to guess the field names. They now have explicit, typed parameters.
 
-## Schema fixes (tool → REST API alignment)
+| Tool Name | Change | New Parameters |
+|-----------|--------|----------------|
+| `record_deposit` | **breaking** — replaced `data` | `amount` (number, req), `currency` (string, req), `date` (string, req), `fxRate` (number, opt), `subPortfolioId` (number, opt), `notes` (string, opt) |
+| `record_withdrawal` | **breaking** — replaced `data` | Same as `record_deposit` (amount is positive, API negates it) |
+| `record_dividend` | **breaking** — replaced `data` | `instrumentId` (number, req), `exDate` (string, req), `amountPerShare` (number, req), `currency` (string, req), `payDate` (string, opt), `fxRate` (number, opt), `subPortfolioId` (number, opt), `notes` (string, opt) |
+| `create_sub_portfolio` | **breaking** — replaced `data` | `name` (string, req), `description` (string, opt) |
+| `update_portfolio_config` | **breaking** — replaced `data` | `name` (string, opt), `baseCurrency` (string, opt), `marginLimit` (number, opt) |
 
-Several tool schemas were rejecting payloads the REST API accepts. These are all **breaking** changes to the MCP tool schemas.
+### IC decision filter changes
 
-### Screening
+| Tool Name | Change | Details |
+|-----------|--------|---------|
+| `list_decisions` | removed param | `assignee` filter removed — not in API. Status filter updated to `pending/executed/cancelled`. |
 
-| Tool | Fix |
-|------|-----|
-| `create_screening_profile` | Criteria items: replaced `field` with `metricId`, `calcGroup`, `calc`, and added `valueMax`. `includeFilters` is now required (pass `{}`). `scope` documented as `nordic` or `global`. |
-| `update_screening_profile` | Same criteria schema fix as above. |
-| `create_intersection_config` | Pipeline items: replaced `z.any()` with discriminated union — `gate` (`type` + `profileId`) and `threshold` (`type` + `profileIds` + `min`). `scoring` now typed as `{ profileWeights: { [profileId]: weight } }`. |
-| `update_intersection_config` | Same pipeline/scoring schema fix. |
-
-### Valuation
-
-| Tool | Fix |
-|------|-----|
-| `execute_valuation` | `inputData` changed from `z.record` to passthrough (`z.any`) — avoids stripping nested model-specific structure. |
-| `create_valuation_model` | `template` changed from `z.record` to passthrough — model-type-specific, no MCP-side validation. |
-| `update_valuation_model` | Same `template` passthrough fix. |
-| `create_scenario` | Replaced opaque `data` wrapper with explicit top-level fields: `name` (req), `modelId` (req), `instrumentId` (req), `inputData`, `description`, `author`. |
-| `update_scenario` | Replaced `data` wrapper with explicit fields: `name`, `inputData`, `description`. |
-| `compare_scenarios` | Replaced `data` wrapper with `scenarioIds` (string[], req). |
-| `export_scenarios_to_ic` | Replaced `data` wrapper with `scenarioIds` (string[], req) + `meetingId` (number, req). |
-| `what_if_valuation` | Replaced `data` wrapper with `inputData` (passthrough). |
-
-### IC
-
-| Tool | Fix |
-|------|-----|
-| `post_minutes` | Param renamed `body` → `minutes` to match API field name. Removed stale `meetingId`/`author` from request body. |
-| `update_minutes` | Param renamed `body` → `minutes` to match API. |
-
-> **Action required:** These 14 schema fixes unblock screening, valuation, and IC meeting prep workflows. Update agent tool configs — especially `create_screening_profile` criteria format and all valuation tools that previously used the `data` wrapper pattern.
+> **Action required:** Update all 6 tool schemas above. The portfolio tools are the biggest change — agents that were passing `{data: {amount: 100, ...}}` must now pass `{amount: 100, ...}` at the top level.
 
 ## No changes
 
-131 tools unchanged.
+~110 tools unchanged and verified working.
 
 ## Full tool count
 
-Total: **145 tools** across **12 modules** (was 149 — removed 4 ghost tools).
+Total: **166 tools** across **12 modules** (was 145).
 
-| Module | Tools |
-|--------|-------|
-| strategy | 4 |
-| instruments | 8 |
-| comments | 2 |
-| screening & universe | 34 |
-| research | 5 |
-| valuation | 19 |
-| ic | 10 |
-| portfolio | 27 |
-| performance | 9 |
-| risk | 14 |
-| notifications | 4 |
-| platform | 9 |
+| Module | Tools | Change |
+|--------|-------|--------|
+| strategy | 4 | — |
+| instruments | 8 | enum fixes |
+| comments | 2 | — |
+| screening & universe | 37 | +3 new |
+| research | 5 | schema fix |
+| valuation | 19 | — |
+| ic | 18 | +8 restored, schema fixes |
+| portfolio | 37 | +10 new, 5 schema fixes |
+| performance | 9 | — |
+| risk | 14 | schema fix |
+| notifications | 4 | — |
+| platform | 9 | — |

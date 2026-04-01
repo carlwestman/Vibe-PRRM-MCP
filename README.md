@@ -118,7 +118,7 @@ Add the following to your `openclaw.json`:
 
 ## Tool Catalog
 
-The server exposes 149 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
+The server exposes 166 tools across 12 modules. Every tool maps 1:1 to a PRRM REST API endpoint.
 
 ### Strategy (4 tools)
 
@@ -149,7 +149,7 @@ The server exposes 149 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `get_comments` | Get comments for an instrument or research report |
 | `add_comment` | Add a comment to an instrument or research report |
 
-### Screening & Universe (34 tools)
+### Screening & Universe (37 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -222,7 +222,7 @@ The server exposes 149 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `compare_scenarios` | Compare multiple scenarios side by side |
 | `export_scenarios_to_ic` | Export scenarios to an IC meeting agenda |
 
-### Investment Committee (14 tools)
+### Investment Committee (18 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -241,7 +241,7 @@ The server exposes 149 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 | `update_decision_status` | Update decision status (Decided/In Progress/Executed/Reviewed) |
 | `list_decisions` | List IC decisions with optional filters |
 
-### Portfolio (27 tools)
+### Portfolio (37 tools)
 
 | Tool | Description |
 |------|-------------|
@@ -369,11 +369,11 @@ packages/mcp-client/
       strategy.ts         # 4 tools
       instruments.ts      # 8 tools
       comments.ts         # 2 tools
-      screening.ts        # 34 tools
+      screening.ts        # 37 tools
       research.ts         # 5 tools
       valuation.ts        # 19 tools
-      ic.ts               # 14 tools
-      portfolio.ts        # 27 tools
+      ic.ts               # 18 tools
+      portfolio.ts        # 37 tools
       performance.ts      # 9 tools
       risk.ts             # 14 tools
       notifications.ts    # 4 tools
