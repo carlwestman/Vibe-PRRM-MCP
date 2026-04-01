@@ -7,7 +7,7 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "register_trade",
     "Register a new trade in the portfolio",
     {
-      instrumentId: z.number().describe("Instrument ID"),
+      instrumentId: z.string().describe("Instrument ID"),
       tradeType: z.enum(["buy", "sell"]).describe("Trade type"),
       shares: z.number().describe("Number of shares"),
       pricePerShare: z.number().describe("Price per share"),
@@ -138,10 +138,15 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "record_deposit",
     "Record a cash deposit",
     {
-      data: z.record(z.any()).optional().describe("Deposit details"),
+      amount: z.number().describe("Deposit amount"),
+      currency: z.string().describe("Currency code (e.g. SEK, USD)"),
+      date: z.string().describe("Deposit date (YYYY-MM-DD)"),
+      fxRate: z.number().optional().describe("FX rate to base currency (default: 1)"),
+      subPortfolioId: z.number().optional().describe("Target sub-portfolio ID"),
+      notes: z.string().optional().describe("Notes"),
     },
-    async ({ data }) => {
-      const result = await api.post("/portfolio/cash/deposit", data);
+    async (params) => {
+      const result = await api.post("/portfolio/cash/deposit", params);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -170,12 +175,17 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "record_withdrawal",
-    "Record a cash withdrawal",
+    "Record a cash withdrawal (amount is positive — API negates it)",
     {
-      data: z.record(z.any()).optional().describe("Withdrawal details"),
+      amount: z.number().describe("Withdrawal amount (positive)"),
+      currency: z.string().describe("Currency code (e.g. SEK, USD)"),
+      date: z.string().describe("Withdrawal date (YYYY-MM-DD)"),
+      fxRate: z.number().optional().describe("FX rate to base currency (default: 1)"),
+      subPortfolioId: z.number().optional().describe("Source sub-portfolio ID"),
+      notes: z.string().optional().describe("Notes"),
     },
-    async ({ data }) => {
-      const result = await api.post("/portfolio/cash/withdraw", data);
+    async (params) => {
+      const result = await api.post("/portfolio/cash/withdraw", params);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -196,10 +206,12 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "update_portfolio_config",
     "Update portfolio configuration",
     {
-      data: z.record(z.any()).optional().describe("Configuration fields to update"),
+      name: z.string().optional().describe("Portfolio name"),
+      baseCurrency: z.string().optional().describe("Base currency code (e.g. SEK)"),
+      marginLimit: z.number().optional().describe("Margin limit"),
     },
-    async ({ data }) => {
-      const result = await api.patch("/portfolio/config", data);
+    async (params) => {
+      const result = await api.patch("/portfolio/config", params);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -228,10 +240,17 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "record_dividend",
     "Record a dividend payment",
     {
-      data: z.record(z.any()).optional().describe("Dividend details"),
+      instrumentId: z.number().describe("Instrument ID"),
+      exDate: z.string().describe("Ex-dividend date (YYYY-MM-DD)"),
+      amountPerShare: z.number().describe("Dividend amount per share"),
+      currency: z.string().describe("Dividend currency"),
+      payDate: z.string().optional().describe("Payment date (YYYY-MM-DD)"),
+      fxRate: z.number().optional().describe("FX rate to base currency"),
+      subPortfolioId: z.number().optional().describe("Sub-portfolio ID"),
+      notes: z.string().optional().describe("Notes"),
     },
-    async ({ data }) => {
-      const result = await api.post("/portfolio/dividends", data);
+    async (params) => {
+      const result = await api.post("/portfolio/dividends", params);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -354,10 +373,145 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "create_sub_portfolio",
     "Create a new sub-portfolio (sleeve)",
     {
-      data: z.record(z.any()).optional().describe("Sub-portfolio details (name, description, etc.)"),
+      name: z.string().describe("Sub-portfolio name"),
+      description: z.string().optional().describe("Description"),
+    },
+    async (params) => {
+      const result = await api.post("/portfolio/sub-portfolios", params);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  // ─── New portfolio tools ───────────────────────────────
+
+  server.tool(
+    "update_position_price",
+    "Update the price on a portfolio position",
+    {
+      instrumentId: z.string().describe("Instrument ID"),
+      price: z.number().describe("Updated price"),
+      priceDate: z.string().optional().describe("Price date (YYYY-MM-DD)"),
+    },
+    async ({ instrumentId, ...rest }) => {
+      const result = await api.patch(`/portfolio/positions/${instrumentId}`, rest);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "assign_position_sleeve",
+    "Assign a position to a sub-portfolio sleeve",
+    {
+      instrumentId: z.string().describe("Instrument ID"),
+      subPortfolioId: z.number().optional().describe("Sub-portfolio ID (omit to unassign)"),
+    },
+    async ({ instrumentId, subPortfolioId }) => {
+      const result = await api.patch(`/portfolio/positions/${instrumentId}/sleeve`, { subPortfolioId });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "import_portfolio",
+    "Import portfolio data (CSV/broker file upload)",
+    {
+      data: z.any().describe("Import payload — passed through to the API"),
     },
     async ({ data }) => {
-      const result = await api.post("/portfolio/sub-portfolios", data);
+      const result = await api.post("/portfolio/import", data);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "import_transactions",
+    "Import transactions from an external source",
+    {
+      data: z.any().describe("Transaction import payload — passed through to the API"),
+      dry_run: z.boolean().optional().describe("If true, validate without committing"),
+      sub_portfolio_id: z.number().optional().describe("Target sub-portfolio ID"),
+    },
+    async ({ data, dry_run, sub_portfolio_id }) => {
+      const result = await api.post("/portfolio/import/transactions", data);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "update_cash_transaction",
+    "Update a cash transaction",
+    {
+      id: z.string().describe("Cash transaction ID"),
+      type: z.enum(["deposit", "withdrawal", "margin_draw", "margin_repay"]).optional().describe("Transaction type"),
+      amount: z.number().optional().describe("Updated amount"),
+      currency: z.string().optional().describe("Updated currency"),
+      fxRate: z.number().optional().describe("Updated FX rate"),
+      date: z.string().optional().describe("Updated date (YYYY-MM-DD)"),
+      notes: z.string().optional().describe("Updated notes"),
+    },
+    async ({ id, ...rest }) => {
+      const result = await api.patch(`/portfolio/cash/transactions/${id}`, rest);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "delete_cash_transaction",
+    "Delete a cash transaction",
+    {
+      id: z.string().describe("Cash transaction ID to delete"),
+    },
+    async ({ id }) => {
+      const result = await api.delete(`/portfolio/cash/transactions/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_sub_portfolio_summary",
+    "Get summary metrics for all sub-portfolios",
+    {},
+    async () => {
+      const result = await api.get("/portfolio/sub-portfolios/summary");
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "get_sub_portfolio",
+    "Get a specific sub-portfolio by ID",
+    {
+      id: z.string().describe("Sub-portfolio ID"),
+    },
+    async ({ id }) => {
+      const result = await api.get(`/portfolio/sub-portfolios/${id}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "update_sub_portfolio",
+    "Update a sub-portfolio",
+    {
+      id: z.string().describe("Sub-portfolio ID"),
+      name: z.string().optional().describe("Updated name"),
+      description: z.string().optional().describe("Updated description"),
+      sortOrder: z.number().optional().describe("Updated sort order"),
+    },
+    async ({ id, ...rest }) => {
+      const result = await api.patch(`/portfolio/sub-portfolios/${id}`, rest);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "delete_sub_portfolio",
+    "Delete a sub-portfolio",
+    {
+      id: z.string().describe("Sub-portfolio ID to delete"),
+    },
+    async ({ id }) => {
+      const result = await api.delete(`/portfolio/sub-portfolios/${id}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

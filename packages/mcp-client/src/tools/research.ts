@@ -39,15 +39,15 @@ export function registerResearchTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "create_research_report",
-    "Create a new research report",
+    "Create a new research report. IMPORTANT: instrumentId, type, and author cannot be changed after creation — set them correctly here.",
     {
       title: z.string().describe("Report title"),
-      type: z.string().describe("Report type (e.g. Instrument Research, Thematic, Ad-Hoc)"),
-      instrumentId: z.number().describe("Associated instrument ID"),
-      author: z.string().describe("Report author"),
+      type: z.enum(["Instrument Research", "Thematic", "Sector", "Macro", "Ad-Hoc", "Other"]).describe("Report type"),
+      instrumentId: z.string().describe("Associated instrument ID — immutable after creation"),
       body: z.string().describe("Report content in markdown"),
-      recommendation: z.string().optional().describe("Investment recommendation (Buy, Sell, Hold)"),
-      status: z.string().optional().describe("Report status (default: draft)"),
+      author: z.string().optional().describe("Report author — immutable after creation"),
+      recommendation: z.enum(["buy", "hold", "sell", "under_review"]).optional().describe("Investment recommendation"),
+      status: z.enum(["draft", "review", "published", "archived"]).optional().describe("Report status (default: draft)"),
     },
     async (params) => {
       const result = await api.post("/research", params);
@@ -57,13 +57,13 @@ export function registerResearchTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "update_research_report",
-    "Update an existing research report",
+    "Update an existing research report. Note: instrumentId, type, and author are immutable — they can only be set at creation time.",
     {
       id: z.string().describe("Report ID to update"),
       title: z.string().optional().describe("Updated title"),
       body: z.string().optional().describe("Updated body content"),
-      status: z.string().optional().describe("Updated status"),
-      recommendation: z.string().optional().describe("Updated recommendation"),
+      status: z.string().optional().describe("Updated status: draft, review, published, archived"),
+      recommendation: z.string().optional().describe("Updated recommendation: buy, hold, sell, under_review"),
     },
     async ({ id, ...rest }) => {
       const result = await api.patch(`/research/${id}`, rest);

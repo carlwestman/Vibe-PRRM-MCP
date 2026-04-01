@@ -7,11 +7,11 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
     "publish_risk_report",
     "Publish a new risk report",
     {
-      type: z.string().describe("Report type (e.g. daily, weekly, adhoc)"),
+      type: z.enum(["daily", "weekly", "ad_hoc"]).describe("Report type"),
       title: z.string().describe("Report title"),
       body: z.string().describe("Report content in markdown"),
       metrics: z.record(z.any()).optional().describe("Key risk metrics as key-value pairs"),
-      author: z.string().describe("Report author"),
+      author: z.string().optional().describe("Report author"),
     },
     async (params) => {
       const result = await api.post("/risk/reports", params);

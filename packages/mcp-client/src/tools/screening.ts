@@ -99,6 +99,19 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
   );
 
   server.tool(
+    "evaluate_instrument_against_profile",
+    "Evaluate a single instrument against a screening profile's criteria",
+    {
+      profileId: z.string().describe("Screening profile ID"),
+      instrumentId: z.string().describe("Instrument ID to evaluate"),
+    },
+    async ({ profileId, instrumentId }) => {
+      const result = await api.get(`/screening/profiles/${profileId}/evaluate/${instrumentId}`);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
     "get_screen_results",
     "Get results from a completed screening run",
     {
@@ -490,6 +503,41 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
     },
     async ({ proposalId }) => {
       const result = await api.put("/universe/replace", { proposalId });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "create_universe_override",
+    "Add a manual override instrument directly to the universe",
+    {
+      displayName: z.string().describe("Instrument display name"),
+      rationale: z.string().describe("Reason for the manual override"),
+      ticker: z.string().optional().describe("Ticker symbol"),
+      assetClass: z.string().optional().describe("Asset class"),
+      sector: z.string().optional().describe("Sector"),
+      country: z.string().optional().describe("Country"),
+      exchange: z.string().optional().describe("Exchange"),
+      currency: z.string().optional().describe("Currency"),
+      borsdataInsId: z.number().optional().describe("Borsdata instrument ID"),
+      borsdataUrlName: z.string().optional().describe("Borsdata URL name"),
+      instrumentId: z.number().optional().describe("Existing instrument ID to link"),
+      externalIds: z.array(z.any()).optional().describe("External identifiers"),
+    },
+    async (params) => {
+      const result = await api.post("/universe/overrides", params);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    }
+  );
+
+  server.tool(
+    "bulk_create_instruments",
+    "Bulk-create instruments from a universe version's instrument list",
+    {
+      versionInstrumentIds: z.array(z.number()).describe("Universe version instrument IDs to create as instruments"),
+    },
+    async (params) => {
+      const result = await api.post("/universe/bulk-create-instruments", params);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
