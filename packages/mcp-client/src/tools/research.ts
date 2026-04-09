@@ -39,14 +39,18 @@ export function registerResearchTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "create_research_report",
-    "Create a new research report. IMPORTANT: instrumentId, type, and author cannot be changed after creation — set them correctly here.",
+    "Create a new research report. Link instruments via instrumentIds (array of integer IDs). Type and author cannot be changed after creation.",
     {
       title: z.string().describe("Report title"),
       type: z.enum(["Instrument Research", "Thematic", "Sector", "Macro", "Ad-Hoc", "Other"]).describe("Report type"),
-      instrumentId: z.string().describe("Associated instrument ID — immutable after creation"),
+      instrumentIds: z.array(z.number().int()).default([]).describe("Instrument IDs to link (e.g. [1, 42]). Use search_instruments to find IDs."),
       body: z.string().describe("Report content in markdown"),
-      author: z.string().optional().describe("Report author — immutable after creation"),
+      author: z.string().optional().describe("Report author"),
       recommendation: z.enum(["buy", "hold", "sell", "under_review"]).optional().describe("Investment recommendation"),
+      targetPrice: z.number().optional().describe("Target price"),
+      timeHorizon: z.string().optional().describe("Investment time horizon"),
+      conviction: z.string().optional().describe("Conviction level"),
+      riskRating: z.string().optional().describe("Risk rating"),
       status: z.enum(["draft", "review", "published", "archived"]).optional().describe("Report status (default: draft)"),
     },
     async (params) => {
@@ -57,13 +61,18 @@ export function registerResearchTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "update_research_report",
-    "Update an existing research report. Note: instrumentId, type, and author are immutable — they can only be set at creation time.",
+    "Update an existing research report. Note: type and author are immutable. instrumentIds CAN be updated.",
     {
       id: z.string().describe("Report ID to update"),
       title: z.string().optional().describe("Updated title"),
       body: z.string().optional().describe("Updated body content"),
-      status: z.string().optional().describe("Updated status: draft, review, published, archived"),
-      recommendation: z.string().optional().describe("Updated recommendation: buy, hold, sell, under_review"),
+      instrumentIds: z.array(z.number().int()).optional().describe("Updated instrument IDs to link"),
+      status: z.enum(["draft", "review", "published", "archived"]).optional().describe("Updated status"),
+      recommendation: z.enum(["buy", "hold", "sell", "under_review"]).optional().describe("Updated recommendation"),
+      targetPrice: z.number().optional().describe("Updated target price"),
+      timeHorizon: z.string().optional().describe("Updated time horizon"),
+      conviction: z.string().optional().describe("Updated conviction level"),
+      riskRating: z.string().optional().describe("Updated risk rating"),
     },
     async ({ id, ...rest }) => {
       const result = await api.patch(`/research/${id}`, rest);
