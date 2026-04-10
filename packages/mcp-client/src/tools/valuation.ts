@@ -58,11 +58,11 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "execute_valuation",
-    "Execute a valuation model against an instrument with input data",
+    "Execute a valuation model directly without creating a scenario. WARNING: this endpoint is currently unstable on the API side. Prefer the standard workflow: create_scenario → execute_scenario.",
     {
       modelId: z.string().describe("Valuation model ID to execute"),
       instrumentId: z.string().describe("Target instrument ID"),
-      inputData: z.any().describe("Input assumptions for the model — structure varies by model type, passed through to the API without validation"),
+      inputData: z.any().describe("Flat key-value assumptions object. If using autofill_valuation, pass autofill.inputs."),
       author: z.string().describe("Person running the valuation"),
     },
     async (params) => {
@@ -99,7 +99,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "autofill_valuation",
-    "Auto-fill valuation model inputs from Borsdata data for an instrument",
+    "Auto-fill valuation model inputs from Borsdata data. Returns {inputs, sources} where inputs is the flat key-value assumptions object and sources tracks where each value came from. When passing to create_scenario, pass only the .inputs subobject as inputData — not the whole response.",
     {
       modelId: z.number().describe("Valuation model ID"),
       instrumentId: z.number().describe("Instrument ID to pull data for"),
@@ -131,12 +131,12 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "create_scenario",
-    "Create a new valuation scenario. inputData and author are REQUIRED. Use autofill_valuation to get a starter inputData object for a given model+instrument.",
+    "Create a new valuation scenario. inputData and author are REQUIRED. IMPORTANT: if using autofill_valuation, pass autofill.inputs (NOT the whole autofill response) — the API expects a flat key-value object of assumptions, not the {inputs, sources} wrapper.",
     {
       name: z.string().describe("Scenario name"),
       modelId: z.number().describe("Valuation model ID"),
       instrumentId: z.number().describe("Target instrument ID"),
-      inputData: z.any().describe("Input assumptions object — required. Pass {} for empty. Structure varies by model type."),
+      inputData: z.any().describe("Flat key-value assumptions object (e.g. {revenue: 12958, beta: 1, ...}). If using autofill_valuation, pass autofill.inputs — NOT the whole response. Pass {} for empty."),
       author: z.string().describe("Scenario author"),
       description: z.string().optional().describe("Scenario description"),
     },
