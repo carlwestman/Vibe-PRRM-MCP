@@ -131,14 +131,14 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "create_scenario",
-    "Create a new valuation scenario. Pass all fields at the top level (e.g. name, modelId, instrumentId, inputData).",
+    "Create a new valuation scenario. inputData and author are REQUIRED. Use autofill_valuation to get a starter inputData object for a given model+instrument.",
     {
       name: z.string().describe("Scenario name"),
       modelId: z.number().describe("Valuation model ID"),
       instrumentId: z.number().describe("Target instrument ID"),
-      inputData: z.any().optional().describe("Input assumptions — structure varies by model type, passed through to the API"),
+      inputData: z.any().describe("Input assumptions object — required. Pass {} for empty. Structure varies by model type."),
+      author: z.string().describe("Scenario author"),
       description: z.string().optional().describe("Scenario description"),
-      author: z.string().optional().describe("Scenario author"),
     },
     async (params) => {
       const result = await api.post("/valuation/scenarios", params);
