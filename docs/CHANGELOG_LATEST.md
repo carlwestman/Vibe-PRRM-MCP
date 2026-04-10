@@ -1,8 +1,37 @@
 # PRRM MCP — Change Report
 
-**Date:** 2026-04-01
+**Date:** 2026-04-11
 **MCP Package Version:** 0.1.0
 **Repo:** https://github.com/carlwestman/Vibe-PRRM-MCP
+
+## 2026-04-11 — Hotfixes (research + valuation)
+
+### Critical fixes verified against live API
+
+| Tool | Issue | Fix |
+|------|-------|-----|
+| `create_research_report` | `instrumentId` (singular string) was silently ignored — instruments never linked | Renamed to `instrumentIds` (array of integers). Added `targetPrice`, `timeHorizon`, `conviction`, `riskRating`. |
+| `update_research_report` | Missing fields — couldn't update recommendation, status, target price, etc. | Added `instrumentIds` (mutable), `targetPrice`, `timeHorizon`, `conviction`, `riskRating`. |
+| `create_research_report` / `update_research_report` | `recommendation` enum was lowercase (`buy/hold/sell/under_review`), API rejected all values | Corrected to API enum: `Buy / Hold / Sell / No Rating` |
+| `create_research_report` / `update_research_report` | `status` enum was lowercase 4 values (`draft/review/published/archived`), API rejected all | Corrected to API enum: `Draft / Published / Archived` (3 values, no "review") |
+| `create_scenario` | `inputData` and `author` were marked optional but API requires both — every call failed with "Invalid request data" | Both fields now required in the schema. |
+| `create_scenario` | Description didn't explain that `autofill_valuation.inputs` (not the whole response) is what goes into `inputData` | Description now warns explicitly: pass `autofill.inputs`, NOT the `{inputs, sources}` wrapper. |
+| `autofill_valuation` | Tool description didn't document the `{inputs, sources}` return shape | Description now documents the response shape and where to unwrap. |
+| `execute_valuation` | Returns HTTP 500 "An unexpected error occurred" on every call (API-side bug) | Description now flags as unstable and points to the `create_scenario` → `execute_scenario` workflow as the recommended path. |
+
+### Verification
+
+All fixes were validated by reproducing failures end-to-end against the live API, then confirming success after the fix. The OpenAPI spec is stale on enum values — fixes were derived from actual API validation error responses.
+
+### Action required for agents
+
+1. **Research reports**: Use `instrumentIds: [1, 42]` (plural array of integers), not `instrumentId`. Use Title-cased enum values (`Buy`, `Draft`, etc.).
+2. **Valuation scenarios**: Always pass `inputData` and `author`. When using autofill, pass `autofill.inputs` — not the whole response.
+3. **Don't use `execute_valuation`** — use `create_scenario` → `execute_scenario` instead.
+
+---
+
+## 2026-04-01 — Initial full sync
 
 ## How to update
 
