@@ -31,7 +31,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     {
       name: z.string().describe("Model name"),
       type: z.enum(["dcf", "comparables", "ddm", "nav", "custom"]).describe("Model type"),
-      template: z.any().describe("JSON template defining model inputs and formula — structure varies by model type, passed through to the API"),
+      template: z.object({}).passthrough().describe("JSON template defining model inputs and formula — structure varies by model type, passed through to the API"),
       description: z.string().optional().describe("Model description"),
       author: z.string().optional().describe("Model author"),
     },
@@ -48,7 +48,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
       id: z.string().describe("Model ID to update"),
       name: z.string().optional().describe("Updated name"),
       description: z.string().optional().describe("Updated description"),
-      template: z.any().optional().describe("Updated template definition — passed through to the API"),
+      template: z.object({}).passthrough().optional().describe("Updated template definition — passed through to the API"),
     },
     async ({ id, ...rest }) => {
       const result = await api.patch(`/valuation/models/${id}`, rest);
@@ -62,7 +62,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     {
       modelId: z.string().describe("Valuation model ID to execute"),
       instrumentId: z.string().describe("Target instrument ID"),
-      inputData: z.any().describe("Flat key-value assumptions object. If using autofill_valuation, pass autofill.inputs."),
+      inputData: z.object({}).passthrough().describe("Flat key-value assumptions object. If using autofill_valuation, pass autofill.inputs."),
       author: z.string().describe("Person running the valuation"),
     },
     async (params) => {
@@ -136,7 +136,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
       name: z.string().describe("Scenario name"),
       modelId: z.number().describe("Valuation model ID"),
       instrumentId: z.number().describe("Target instrument ID"),
-      inputData: z.any().describe("Flat key-value assumptions object (e.g. {revenue: 12958, beta: 1, ...}). If using autofill_valuation, pass autofill.inputs — NOT the whole response. Pass {} for empty."),
+      inputData: z.object({}).passthrough().describe("Flat key-value assumptions object (e.g. {revenue: 12958, beta: 1, ...}). If using autofill_valuation, pass autofill.inputs — NOT the whole response. Pass {} for empty."),
       author: z.string().describe("Scenario author"),
       description: z.string().optional().describe("Scenario description"),
     },
@@ -164,7 +164,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     {
       id: z.number().describe("Scenario ID"),
       name: z.string().optional().describe("Updated name"),
-      inputData: z.any().optional().describe("Updated input assumptions — passed through to the API"),
+      inputData: z.object({}).passthrough().optional().describe("Updated input assumptions — passed through to the API"),
       description: z.string().optional().describe("Updated description"),
     },
     async ({ id, ...rest }) => {
@@ -226,7 +226,7 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     "Run a disposable what-if analysis on a scenario without saving",
     {
       id: z.number().describe("Scenario ID to base the what-if on"),
-      inputData: z.any().optional().describe("Override input assumptions for the what-if — passed through to the API"),
+      inputData: z.object({}).passthrough().optional().describe("Override input assumptions for the what-if — passed through to the API"),
     },
     async ({ id, inputData }) => {
       const result = await api.post(`/valuation/scenarios/${id}/what-if`, { inputData });

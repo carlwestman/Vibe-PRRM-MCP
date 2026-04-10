@@ -415,7 +415,7 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "import_portfolio",
     "Import portfolio data (CSV/broker file upload)",
     {
-      data: z.any().describe("Import payload — passed through to the API"),
+      data: z.object({}).passthrough().describe("Import payload — passed through to the API"),
     },
     async ({ data }) => {
       const result = await api.post("/portfolio/import", data);
@@ -427,7 +427,7 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     "import_transactions",
     "Import transactions from an external source",
     {
-      data: z.any().describe("Transaction import payload — passed through to the API"),
+      data: z.object({}).passthrough().describe("Transaction import payload — passed through to the API"),
       dry_run: z.boolean().optional().describe("If true, validate without committing"),
       sub_portfolio_id: z.number().optional().describe("Target sub-portfolio ID"),
     },
