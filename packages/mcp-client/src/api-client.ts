@@ -7,6 +7,13 @@ function log(method: string, path: string, status?: number) {
   }
 }
 
+function logBody(direction: "→" | "←", body: unknown) {
+  if (debug && body !== undefined) {
+    const text = typeof body === "string" ? body : JSON.stringify(body);
+    process.stderr.write(`[prrm-mcp]   ${direction} ${text.slice(0, 1000)}${text.length > 1000 ? "…" : ""}\n`);
+  }
+}
+
 export class PrrmApiClient {
   private baseUrl: string;
   private token: string;
@@ -45,6 +52,7 @@ export class PrrmApiClient {
     const hasBody = opts?.body !== undefined;
 
     log(method, path);
+    if (hasBody) logBody("→", opts!.body);
 
     const res = await fetch(url, {
       method,
@@ -55,6 +63,7 @@ export class PrrmApiClient {
     log(method, path, res.status);
 
     const text = await res.text();
+    logBody("←", text);
     let json: any;
     try {
       json = JSON.parse(text);
