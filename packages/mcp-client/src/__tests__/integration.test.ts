@@ -68,8 +68,8 @@ describe("Strategy tools", () => {
 describe("Instrument tools", () => {
   let instrumentId: string;
 
-  it("search_instruments returns array", async () => {
-    const data = await callTool("search_instruments", { limit: 3 });
+  it("search_prrm_instruments returns array", async () => {
+    const data = await callTool("search_prrm_instruments", { limit: 3 });
     expect(Array.isArray(data)).toBe(true);
     expect(data.length).toBeGreaterThan(0);
     instrumentId = String(data[0].id);

@@ -31,7 +31,7 @@ investment committee management, portfolio tracking, and risk monitoring.
 ## Common Workflows
 
 ### Research an Instrument
-1. \`search_instruments\` — find the instrument
+1. \`search_prrm_instruments\` — find the instrument
 2. \`get_instrument\` — get full details
 3. \`list_research_reports\` with instrument_id — see existing research
 4. \`list_valuations_by_instrument\` — see valuations

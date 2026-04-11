@@ -78,9 +78,9 @@ Update the investment strategy document with new content.
 
 ## Instruments
 
-### `search_instruments`
+### `search_prrm_instruments`
 
-Search for instruments by name, asset class, status, or sector.
+Search PRRM instruments by name, asset class, status, or sector.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -2057,7 +2057,7 @@ All tools follow the same error handling pattern. Errors are **never thrown** to
 When an error is returned, the agent should:
 
 1. Read the `message` and `details` fields to understand what went wrong.
-2. For `404` errors, verify the entity ID is correct (e.g. use `search_instruments` to find the right ID).
+2. For `404` errors, verify the entity ID is correct (e.g. use `search_prrm_instruments` to find the right ID).
 3. For `400`/`422` errors, check the parameter values against the schema above.
 4. For `401`/`403` errors, inform the user that authentication or permissions need attention.
 5. For `500` errors, retry once; if the error persists, report the issue to the user.

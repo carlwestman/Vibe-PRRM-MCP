@@ -4,8 +4,8 @@ import { PrrmApiClient } from "../api-client.js";
 
 export function registerInstrumentTools(server: McpServer, api: PrrmApiClient) {
   server.tool(
-    "search_instruments",
-    "Search for instruments by name, asset class, status, or sector",
+    "search_prrm_instruments",
+    "Search PRRM instruments by name, asset class, status, or sector",
     {
       q: z.string().optional().describe("Search query string"),
       assetClass: z.string().optional().describe("Filter by asset class (e.g. Equity, Fixed Income)"),

@@ -133,7 +133,7 @@ The server exposes 166 tools across 12 modules. Every tool maps 1:1 to a PRRM RE
 
 | Tool | Description |
 |------|-------------|
-| `search_instruments` | Search for instruments by name, asset class, status, or sector |
+| `search_prrm_instruments` | Search PRRM instruments by name, asset class, status, or sector |
 | `get_instrument` | Get detailed information about a specific instrument by ID |
 | `create_instrument` | Create a new instrument in the system |
 | `update_instrument` | Update fields on an existing instrument |

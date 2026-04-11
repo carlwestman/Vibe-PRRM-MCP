@@ -43,7 +43,7 @@ export function registerResearchTools(server: McpServer, api: PrrmApiClient) {
     {
       title: z.string().describe("Report title"),
       type: z.enum(["Instrument Research", "Thematic", "Sector", "Macro", "Ad-Hoc", "Other"]).describe("Report type"),
-      instrumentIds: z.array(z.number().int()).default([]).describe("Instrument IDs to link (e.g. [1, 42]). Use search_instruments to find IDs."),
+      instrumentIds: z.array(z.number().int()).default([]).describe("Instrument IDs to link (e.g. [1, 42]). Use search_prrm_instruments to find IDs."),
       body: z.string().describe("Report content in markdown"),
       author: z.string().optional().describe("Report author"),
       recommendation: z.enum(["Buy", "Hold", "Sell", "No Rating"]).optional().describe("Investment recommendation"),
