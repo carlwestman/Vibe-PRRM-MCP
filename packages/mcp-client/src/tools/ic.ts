@@ -31,30 +31,23 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "list_ic_meetings",
-    "List investment committee meetings",
+    "List IC meetings, or fetch one when id is set. Returns an ICMeeting array when listing, or a single ICMeeting object when id is provided. Same shape either way.",
     {
-      status: z.string().optional().describe("Filter by meeting status"),
-      limit: z.number().optional().describe("Max results"),
-      offset: z.number().optional().describe("Pagination offset"),
+      id: z.string().optional().describe("If set, return this single meeting instead of listing"),
+      status: z.string().optional().describe("Filter by meeting status (ignored when id is set)"),
+      limit: z.number().optional().describe("Max results (ignored when id is set)"),
+      offset: z.number().optional().describe("Pagination offset (ignored when id is set)"),
     },
     async (params) => {
+      if (params.id !== undefined) {
+        const result = await api.get(`/ic/meetings/${params.id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
       const result = await api.get("/ic/meetings", {
         status: params.status,
         limit: params.limit?.toString(),
         offset: params.offset?.toString(),
       });
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_ic_meeting",
-    "Get detailed information about a specific IC meeting",
-    {
-      id: z.string().describe("Meeting ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/ic/meetings/${id}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -123,12 +116,17 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "list_prereads",
-    "List pre-read documents for an IC agenda item",
+    "List pre-read documents for an IC agenda item, or fetch one when prereadId is set. Returns an ICPreread array when listing, or a single ICPreread object when prereadId is provided. Same shape either way.",
     {
       meetingId: z.number().describe("Meeting ID"),
       itemId: z.number().describe("Agenda item ID"),
+      prereadId: z.number().optional().describe("If set, return this single pre-read instead of listing"),
     },
-    async ({ meetingId, itemId }) => {
+    async ({ meetingId, itemId, prereadId }) => {
+      if (prereadId !== undefined) {
+        const result = await api.get(`/ic/meetings/${meetingId}/agenda/${itemId}/prereads/${prereadId}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
       const result = await api.get(`/ic/meetings/${meetingId}/agenda/${itemId}/prereads`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
@@ -146,20 +144,6 @@ export function registerIcTools(server: McpServer, api: PrrmApiClient) {
     },
     async ({ meetingId, itemId, ...rest }) => {
       const result = await api.post(`/ic/meetings/${meetingId}/agenda/${itemId}/prereads`, rest);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_preread",
-    "Get a specific pre-read document",
-    {
-      meetingId: z.number().describe("Meeting ID"),
-      itemId: z.number().describe("Agenda item ID"),
-      prereadId: z.number().describe("Pre-read ID"),
-    },
-    async ({ meetingId, itemId, prereadId }) => {
-      const result = await api.get(`/ic/meetings/${meetingId}/agenda/${itemId}/prereads/${prereadId}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

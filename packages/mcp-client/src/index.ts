@@ -24,24 +24,22 @@ It provides tools for instrument tracking, screening, research reports, valuatio
 investment committee management, portfolio tracking, and risk monitoring.
 
 ## Getting Started
-1. Use \`get_tool_catalog\` to see all available tools organized by module.
-2. Use \`global_search\` to find instruments, research, or meetings by keyword.
-3. Use \`get_strategy\` to read the current investment strategy.
+1. Use \`global_search\` to find instruments, research, or meetings by keyword.
+2. Use \`get_strategy\` to read the current investment strategy.
 
 ## Common Workflows
 
 ### Research an Instrument
 1. \`search_prrm_instruments\` — find the instrument
 2. \`get_instrument\` — get full details
-3. \`list_research_reports\` with instrument_id — see existing research
-4. \`list_valuations_by_instrument\` — see valuations
+3. \`list_research_reports\` — see existing research (pass {id} to fetch a specific report)
+4. \`list_valuations_by_instrument\` — see valuations (pass {instrument_id} to list, or {id} to fetch one)
 5. \`get_comments\` — read discussion threads
 
 ### Prepare for IC Meeting
-1. \`list_ic_meetings\` — find upcoming meetings
-2. \`get_ic_meeting\` — see agenda and details
-3. \`add_agenda_item\` — add items to discuss
-4. \`record_decision\` — capture decisions after the meeting
+1. \`list_ic_meetings\` — find upcoming meetings (pass {id} to fetch a specific meeting)
+2. \`add_agenda_item\` — add items to discuss
+3. \`record_decision\` — capture decisions after the meeting
 
 ### Monitor Risk & Performance
 1. \`get_risk_dashboard\` — current risk overview

@@ -1,6 +1,15 @@
 # PRRM MCP Tool Reference
 
-Complete reference for all 149 tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
+> **⚠ STALE — see CHANGELOG_LATEST.md and README.md for the current tool list.**
+>
+> The per-tool tables below were written for an older 149-tool inventory. The 2026-04-11 tool reduction refactor brought the count to **136 tools** by merging list/get pairs (e.g., `get_X` is now `list_X({id})`), removing dead admin tools, and renaming `run_stress_test` → `run_prrm_stress_test`. Many tool entries below either no longer exist or have new signatures.
+>
+> Authoritative sources after 2026-04-11:
+> - [CHANGELOG_LATEST.md](./CHANGELOG_LATEST.md) — full migration table for `/sync-prrm`
+> - [../README.md#tool-catalog](../README.md#tool-catalog) — current tool list with counts
+> - The MCP server's `tools/list` response — runtime ground truth
+
+Complete reference for all tools exposed by the `@wsvc/prrm-mcp` server, organized by module. Every tool maps to a PRRM REST API endpoint under `/api/v1/`.
 
 All parameters are validated with Zod schemas before the API call is made. Tool results are returned as JSON text content. Errors are never thrown -- they are returned as text so the agent can read and react to them.
 

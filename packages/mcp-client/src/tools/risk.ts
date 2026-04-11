@@ -20,18 +20,6 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
   );
 
   server.tool(
-    "get_risk_report",
-    "Get a specific risk report by ID",
-    {
-      id: z.string().describe("Risk report ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/risk/reports/${id}`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
     "get_risk_dashboard",
     "Get the current risk dashboard with key metrics and alerts",
     {},
@@ -43,13 +31,18 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "list_risk_reports",
-    "List risk reports with optional filters",
+    "List risk reports, or fetch one when id is set. Returns a RiskReport array when listing, or a single RiskReport object when id is provided. Same shape either way.",
     {
-      type: z.string().optional().describe("Filter by report type"),
-      date_from: z.string().optional().describe("Start date filter (YYYY-MM-DD)"),
-      date_to: z.string().optional().describe("End date filter (YYYY-MM-DD)"),
+      id: z.string().optional().describe("If set, return this single report instead of listing"),
+      type: z.string().optional().describe("Filter by report type (ignored when id is set)"),
+      date_from: z.string().optional().describe("Start date filter YYYY-MM-DD (ignored when id is set)"),
+      date_to: z.string().optional().describe("End date filter YYYY-MM-DD (ignored when id is set)"),
     },
     async (params) => {
+      if (params.id !== undefined) {
+        const result = await api.get(`/risk/reports/${params.id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
       const result = await api.get("/risk/reports", {
         type: params.type,
         date_from: params.date_from,
@@ -181,8 +174,8 @@ export function registerRiskTools(server: McpServer, api: PrrmApiClient) {
   );
 
   server.tool(
-    "run_stress_test",
-    "Run a stress test scenario against the portfolio",
+    "run_prrm_stress_test",
+    "Run a stress test scenario against the PRRM portfolio. Renamed from run_stress_test to avoid collision with portfolio-optimizer MCP.",
     {
       scenario: z.string().describe("Stress test scenario name or description"),
       shocks: z.record(z.any()).describe("Shock parameters (e.g. { equity: -0.2, rates: 0.01 })"),

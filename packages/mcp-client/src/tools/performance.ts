@@ -100,15 +100,20 @@ export function registerPerformanceTools(server: McpServer, api: PrrmApiClient) 
 
   server.tool(
     "list_performance_reports",
-    "List performance reports with optional filters",
+    "List performance reports, or fetch one when id is set. Without id: returns an array of PerformanceReport objects. With id: returns a single PerformanceReport object. (The api-client unwraps the envelope, so both shapes come through bare.)",
     {
-      period: z.enum(["weekly", "monthly", "quarterly", "annual", "ad_hoc"]).optional().describe("Filter by report period"),
-      date_from: z.string().optional().describe("Start date filter (YYYY-MM-DD)"),
-      date_to: z.string().optional().describe("End date filter (YYYY-MM-DD)"),
-      limit: z.number().optional().describe("Max results (default 50)"),
-      offset: z.number().optional().describe("Pagination offset"),
+      id: z.string().optional().describe("If set, return this single report instead of listing"),
+      period: z.enum(["weekly", "monthly", "quarterly", "annual", "ad_hoc"]).optional().describe("Filter by report period (ignored when id is set)"),
+      date_from: z.string().optional().describe("Start date filter YYYY-MM-DD (ignored when id is set)"),
+      date_to: z.string().optional().describe("End date filter YYYY-MM-DD (ignored when id is set)"),
+      limit: z.number().optional().describe("Max results (ignored when id is set)"),
+      offset: z.number().optional().describe("Pagination offset (ignored when id is set)"),
     },
     async (params) => {
+      if (params.id !== undefined) {
+        const result = await api.get(`/performance/reports/${params.id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
       const result = await api.get("/performance/reports", {
         period: params.period,
         date_from: params.date_from,
@@ -138,15 +143,4 @@ export function registerPerformanceTools(server: McpServer, api: PrrmApiClient) 
     }
   );
 
-  server.tool(
-    "get_performance_report",
-    "Get a specific performance report by ID",
-    {
-      id: z.string().describe("Performance report ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/performance/reports/${id}`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
 }

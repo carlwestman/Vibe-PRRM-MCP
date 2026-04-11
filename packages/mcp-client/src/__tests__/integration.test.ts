@@ -121,8 +121,8 @@ describe("Screening tools", () => {
     expect(data).toBeDefined();
   });
 
-  it("get_current_universe returns data", async () => {
-    const data = await callTool("get_current_universe");
+  it("get_universe with no params returns current active universe", async () => {
+    const data = await callTool("get_universe", {});
     expect(data).toBeDefined();
   });
 
@@ -153,9 +153,9 @@ describe("Research tools", () => {
     if (data.length > 0) reportId = String(data[0].id);
   });
 
-  it("get_research_report returns data or error", async () => {
+  it("list_research_reports with id returns single report or error", async () => {
     if (!reportId) return;
-    const data = await callTool("get_research_report", { id: reportId });
+    const data = await callTool("list_research_reports", { id: reportId });
     expect(data).toBeDefined();
     expect(data).toSatisfy((d: any) => d.id !== undefined || d.error !== undefined);
   });
@@ -198,9 +198,9 @@ describe("IC tools", () => {
     expect(data).toBeDefined();
   });
 
-  it("get_ic_meeting returns data or error", async () => {
+  it("list_ic_meetings with id returns single meeting or error", async () => {
     if (!meetingId) return;
-    const data = await callTool("get_ic_meeting", { id: meetingId });
+    const data = await callTool("list_ic_meetings", { id: meetingId });
     expect(data).toBeDefined();
     expect(data).toSatisfy((d: any) => d.id !== undefined || d.error !== undefined);
   });
@@ -362,20 +362,8 @@ describe("Platform tools", () => {
     expect(Array.isArray(data)).toBe(true);
   });
 
-  it("get_tool_catalog returns catalog with correct count", async () => {
-    const data = await callTool("get_tool_catalog");
-    expect(Array.isArray(data)).toBe(true);
-    const totalTools = data.reduce((sum: number, m: any) => sum + m.tools.length, 0);
-    expect(totalTools).toBe(166);
-  });
-
-  it("health_check returns data", async () => {
-    const data = await callTool("health_check");
-    expect(data).toBeDefined();
-  });
-
-  it("get_settings returns data", async () => {
-    const data = await callTool("get_settings");
-    expect(data).toBeDefined();
+  it("registered tool count matches expected total", () => {
+    const tools = (server as any)._registeredTools as Record<string, any>;
+    expect(Object.keys(tools).length).toBe(136);
   });
 });

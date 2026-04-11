@@ -265,68 +265,6 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     }
   );
 
-  // ─── Import sessions ───────────────────────────────────
-
-  server.tool(
-    "create_import_session",
-    "Create a new trade import session (for CSV/broker imports)",
-    {},
-    async () => {
-      const result = await api.post("/portfolio/import/sessions");
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_import_session",
-    "Get an import session with its parsed rows",
-    {
-      id: z.string().describe("Import session ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/portfolio/import/sessions/${id}`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "cancel_import_session",
-    "Cancel an import session and discard its data",
-    {
-      id: z.string().describe("Import session ID"),
-    },
-    async ({ id }) => {
-      const result = await api.delete(`/portfolio/import/sessions/${id}`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "commit_import_session",
-    "Commit an import session, creating trades from its rows",
-    {
-      id: z.string().describe("Import session ID"),
-    },
-    async ({ id }) => {
-      const result = await api.post(`/portfolio/import/sessions/${id}/commit`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "update_import_row",
-    "Update a row in an import session (fix mapping, amounts, etc.)",
-    {
-      id: z.string().describe("Import session ID"),
-      rowId: z.string().describe("Row ID within the session"),
-      data: z.record(z.any()).optional().describe("Fields to update on the row"),
-    },
-    async ({ id, rowId, data }) => {
-      const result = await api.patch(`/portfolio/import/sessions/${id}/rows/${rowId}`, data);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
   // ─── Analytics ──────────────────────────────────────────
 
   server.tool(
@@ -361,9 +299,20 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "list_sub_portfolios",
-    "List all sub-portfolios (sleeves)",
-    {},
-    async () => {
+    "List all sub-portfolios (sleeves), fetch one by id, or get aggregated summary metrics. Three modes: list_sub_portfolios({}) lists all. list_sub_portfolios({id}) fetches a single sub-portfolio. list_sub_portfolios({summary: true}) returns aggregated summary metrics across all sub-portfolios — note: this is a different shape than the per-sub-portfolio detail.",
+    {
+      id: z.string().optional().describe("If set, return this single sub-portfolio instead of listing"),
+      summary: z.boolean().optional().describe("If true, return aggregated summary metrics across all sub-portfolios"),
+    },
+    async ({ id, summary }) => {
+      if (id !== undefined) {
+        const result = await api.get(`/portfolio/sub-portfolios/${id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+      if (summary === true) {
+        const result = await api.get("/portfolio/sub-portfolios/summary");
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
       const result = await api.get("/portfolio/sub-portfolios");
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
@@ -463,28 +412,6 @@ export function registerPortfolioTools(server: McpServer, api: PrrmApiClient) {
     },
     async ({ id }) => {
       const result = await api.delete(`/portfolio/cash/transactions/${id}`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_sub_portfolio_summary",
-    "Get summary metrics for all sub-portfolios",
-    {},
-    async () => {
-      const result = await api.get("/portfolio/sub-portfolios/summary");
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_sub_portfolio",
-    "Get a specific sub-portfolio by ID",
-    {
-      id: z.string().describe("Sub-portfolio ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/portfolio/sub-portfolios/${id}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

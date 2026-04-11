@@ -5,15 +5,20 @@ import { PrrmApiClient } from "../api-client.js";
 export function registerResearchTools(server: McpServer, api: PrrmApiClient) {
   server.tool(
     "list_research_reports",
-    "List research reports with optional filters",
+    "List research reports, or fetch one when id is set. Without id: returns an array of ResearchReport objects. With id: returns a single ResearchReport object. (The api-client unwraps the envelope, so both shapes come through bare.)",
     {
-      type: z.string().optional().describe("Report type filter"),
-      status: z.string().optional().describe("Report status filter"),
-      recommendation: z.string().optional().describe("Filter by recommendation (Buy, Sell, Hold)"),
-      limit: z.number().optional().describe("Max results"),
-      offset: z.number().optional().describe("Pagination offset"),
+      id: z.string().optional().describe("If set, return this single report instead of listing"),
+      type: z.string().optional().describe("Report type filter (ignored when id is set)"),
+      status: z.string().optional().describe("Report status filter (ignored when id is set)"),
+      recommendation: z.string().optional().describe("Filter by recommendation: Buy, Hold, Sell, No Rating (ignored when id is set)"),
+      limit: z.number().optional().describe("Max results (ignored when id is set)"),
+      offset: z.number().optional().describe("Pagination offset (ignored when id is set)"),
     },
     async (params) => {
+      if (params.id !== undefined) {
+        const result = await api.get(`/research/${params.id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
       const result = await api.get("/research", {
         type: params.type,
         status: params.status,
@@ -21,18 +26,6 @@ export function registerResearchTools(server: McpServer, api: PrrmApiClient) {
         limit: params.limit?.toString(),
         offset: params.offset?.toString(),
       });
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_research_report",
-    "Get a specific research report by ID",
-    {
-      id: z.string().describe("Research report ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/research/${id}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

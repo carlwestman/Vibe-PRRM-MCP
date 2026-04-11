@@ -5,22 +5,16 @@ import { PrrmApiClient } from "../api-client.js";
 export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
   server.tool(
     "list_screening_profiles",
-    "List all screening profiles",
-    {},
-    async () => {
-      const result = await api.get("/screening/profiles");
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_screening_profile",
-    "Get a specific screening profile by ID",
+    "List all screening profiles, or fetch one when id is set. Returns a ScreeningProfile array when listing, or a single ScreeningProfile object when id is provided. Same shape either way.",
     {
-      id: z.string().describe("Screening profile ID"),
+      id: z.string().optional().describe("If set, return this single profile instead of listing"),
     },
     async ({ id }) => {
-      const result = await api.get(`/screening/profiles/${id}`);
+      if (id !== undefined) {
+        const result = await api.get(`/screening/profiles/${id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+      const result = await api.get("/screening/profiles");
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -164,13 +158,18 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "get_universe",
-    "Get the instrument universe with optional filters",
+    "Get the current investment universe. With no params: returns the active universe (same as the old get_current_universe). With filters: returns the filtered universe.",
     {
       flagged_only: z.boolean().optional().describe("Filter to flagged instruments only"),
       limit: z.number().optional().describe("Max results (default 50)"),
       offset: z.number().optional().describe("Pagination offset"),
     },
     async (params) => {
+      // No filters → fetch current active universe
+      if (params.flagged_only === undefined && params.limit === undefined && params.offset === undefined) {
+        const result = await api.get("/universe/current");
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
       const result = await api.get("/universe", {
         flagged_only: params.flagged_only?.toString(),
         limit: params.limit?.toString(),
@@ -197,11 +196,16 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "list_intersection_configs",
-    "List screening intersection configurations",
+    "List screening intersection configurations, or fetch one when id is set. Returns an array when listing, or a single config object when id is provided.",
     {
-      status: z.string().optional().describe("Filter by status"),
+      id: z.string().optional().describe("If set, return this single intersection config instead of listing"),
+      status: z.string().optional().describe("Filter by status (ignored when id is set)"),
     },
     async (params) => {
+      if (params.id !== undefined) {
+        const result = await api.get(`/screening/intersections/${params.id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
       const result = await api.get("/screening/intersections", { status: params.status });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
@@ -230,18 +234,6 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
     },
     async (params) => {
       const result = await api.post("/screening/intersections", params);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_intersection_config",
-    "Get a specific screening intersection configuration",
-    {
-      id: z.string().describe("Intersection config ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/screening/intersections/${id}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -305,24 +297,20 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "list_intersection_runs",
-    "List runs for a screening intersection configuration",
+    "List runs for a screening intersection configuration, or fetch a single run when runId is set. Exactly one of configId or runId must be provided. If both are set, runId wins.",
     {
-      id: z.string().describe("Intersection config ID"),
+      configId: z.string().optional().describe("Intersection config ID — list all runs for this config"),
+      runId: z.string().optional().describe("Specific intersection run ID — fetch this single run with full results"),
     },
-    async ({ id }) => {
-      const result = await api.get(`/screening/intersections/${id}/runs`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_intersection_run",
-    "Get a specific intersection run with results",
-    {
-      id: z.string().describe("Intersection run ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/screening/intersection-runs/${id}`);
+    async ({ configId, runId }) => {
+      if (runId !== undefined) {
+        const result = await api.get(`/screening/intersection-runs/${runId}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+      if (configId === undefined) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Either configId or runId is required" }) }] };
+      }
+      const result = await api.get(`/screening/intersections/${configId}/runs`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -343,39 +331,22 @@ export function registerScreeningTools(server: McpServer, api: PrrmApiClient) {
   // ─── Universe management ────────────────────────────────
 
   server.tool(
-    "get_current_universe",
-    "Get the current active investment universe",
-    {},
-    async () => {
-      const result = await api.get("/universe/current");
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
     "list_universe_versions",
-    "List historical universe versions",
+    "List historical universe versions, or fetch one when id is set. WARNING: response shape differs. Without id: returns a wrapped object {data: [...], ...} with the version list inside data. With id: returns a bare version object {id, ...}.",
     {
-      limit: z.number().optional().describe("Max results"),
-      offset: z.number().optional().describe("Pagination offset"),
+      id: z.string().optional().describe("If set, return this single universe version instead of listing"),
+      limit: z.number().optional().describe("Max results (ignored when id is set)"),
+      offset: z.number().optional().describe("Pagination offset (ignored when id is set)"),
     },
     async (params) => {
+      if (params.id !== undefined) {
+        const result = await api.get(`/universe/versions/${params.id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
       const result = await api.get("/universe/versions", {
         limit: params.limit?.toString(),
         offset: params.offset?.toString(),
       });
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_universe_version",
-    "Get a specific universe version by ID",
-    {
-      id: z.string().describe("Universe version ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/universe/versions/${id}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );

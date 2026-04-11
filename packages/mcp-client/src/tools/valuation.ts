@@ -5,22 +5,16 @@ import { PrrmApiClient } from "../api-client.js";
 export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
   server.tool(
     "list_valuation_models",
-    "List all available valuation models",
-    {},
-    async () => {
-      const result = await api.get("/valuation/models");
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_valuation_model",
-    "Get a specific valuation model by ID",
+    "List all available valuation models, or fetch one when id is set. Returns a ValuationModel array when listing, or a single ValuationModel object when id is provided. Same shape either way.",
     {
-      id: z.string().describe("Valuation model ID"),
+      id: z.string().optional().describe("If set, return this single model instead of listing"),
     },
     async ({ id }) => {
-      const result = await api.get(`/valuation/models/${id}`);
+      if (id !== undefined) {
+        const result = await api.get(`/valuation/models/${id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+      const result = await api.get("/valuation/models");
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
@@ -57,39 +51,20 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
   );
 
   server.tool(
-    "execute_valuation",
-    "Execute a valuation model directly without creating a scenario. WARNING: this endpoint is currently unstable on the API side. Prefer the standard workflow: create_scenario → execute_scenario.",
-    {
-      modelId: z.string().describe("Valuation model ID to execute"),
-      instrumentId: z.string().describe("Target instrument ID"),
-      inputData: z.object({}).passthrough().describe("Flat key-value assumptions object. If using autofill_valuation, pass autofill.inputs."),
-      author: z.string().describe("Person running the valuation"),
-    },
-    async (params) => {
-      const result = await api.post("/valuation/execute", params);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_valuation_output",
-    "Get a specific valuation output by ID",
-    {
-      id: z.string().describe("Valuation output ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/valuation/outputs/${id}`);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
     "list_valuations_by_instrument",
-    "List all valuation outputs for a specific instrument",
+    "List valuation outputs for an instrument, or fetch a single output by id. Provide either instrument_id (to list) or id (to fetch one). If both are set, id wins.",
     {
-      instrument_id: z.string().describe("Instrument ID to get valuations for"),
+      instrument_id: z.string().optional().describe("Instrument ID — list all valuation outputs for this instrument"),
+      id: z.string().optional().describe("Specific valuation output ID — fetch this single output"),
     },
-    async ({ instrument_id }) => {
+    async ({ instrument_id, id }) => {
+      if (id !== undefined) {
+        const result = await api.get(`/valuation/outputs/${id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+      if (instrument_id === undefined) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Either instrument_id or id is required" }) }] };
+      }
       const result = await api.get("/valuation/outputs", { instrument_id });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
@@ -117,11 +92,19 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
 
   server.tool(
     "list_scenarios",
-    "List valuation scenarios for an instrument",
+    "List valuation scenarios for an instrument, or fetch a single scenario by id. Provide either instrumentId (to list) or id (to fetch one). If both are set, id wins.",
     {
-      instrumentId: z.number().describe("Instrument ID"),
+      instrumentId: z.number().optional().describe("Instrument ID — list all scenarios for this instrument"),
+      id: z.number().optional().describe("Specific scenario ID — fetch this single scenario"),
     },
-    async ({ instrumentId }) => {
+    async ({ instrumentId, id }) => {
+      if (id !== undefined) {
+        const result = await api.get(`/valuation/scenarios/${id}`);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+      if (instrumentId === undefined) {
+        return { content: [{ type: "text", text: JSON.stringify({ error: "Either instrumentId or id is required" }) }] };
+      }
       const result = await api.get("/valuation/scenarios", {
         instrumentId: instrumentId.toString(),
       });
@@ -142,18 +125,6 @@ export function registerValuationTools(server: McpServer, api: PrrmApiClient) {
     },
     async (params) => {
       const result = await api.post("/valuation/scenarios", params);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    }
-  );
-
-  server.tool(
-    "get_scenario",
-    "Get a specific valuation scenario by ID",
-    {
-      id: z.number().describe("Scenario ID"),
-    },
-    async ({ id }) => {
-      const result = await api.get(`/valuation/scenarios/${id}`);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     }
   );
